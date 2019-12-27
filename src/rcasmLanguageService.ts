@@ -1,10 +1,11 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Paul Law. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 //import { createScanner } from './parser/rcasmScanner';
 import { Parser } from './parser/rcasmParser';
+import { RCASMValidation } from './services/rcasmValidation';
 // import { RCASMCompletion } from './services/rcasmCompletion';
 // import { RCASMHover } from './services/rcasmHover';
 // import { format } from './services/rcasmFormatter';
@@ -13,9 +14,9 @@ import { Parser } from './parser/rcasmParser';
 // import { findDocumentSymbols } from './services/rcasmSymbolsProvider';
 // import { doRename } from './services/rcasmRename';
 // import { findMatchingTagPosition } from './services/rcasmMatchingTagPosition';
-// import { Position, CompletionList, Hover, Range, SymbolInformation, TextEdit, DocumentHighlight, DocumentLink, FoldingRange, SelectionRange, WorkspaceEdit } from 'vscode-languageserver-types';
+import { Diagnostic /* Position, CompletionList, Hover, Range, SymbolInformation, TextEdit, DocumentHighlight, DocumentLink, FoldingRange, SelectionRange, WorkspaceEdit */ } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { /* Scanner, */ Program, /* CompletionConfiguration, ICompletionParticipant, RCASMFormatConfiguration, DocumentContext, IRCASMDataProvider, RCASMDataV1, */ LanguageServiceOptions } from './rcasmLanguageTypes';
+import { /* Scanner, */ Program, /* CompletionConfiguration, ICompletionParticipant, RCASMFormatConfiguration, DocumentContext, IRCASMDataProvider, RCASMDataV1, */ LanguageSettings, LanguageServiceOptions } from './rcasmLanguageTypes';
 // import { getFoldingRanges } from './services/rcasmFolding';
 // import { getSelectionRanges } from './services/rcasmSelectionRange';
 // import { handleCustomDataProviders } from './languageFacts/builtinDataProviders';
@@ -27,6 +28,7 @@ export * from 'vscode-languageserver-types';
 
 export interface LanguageService {
 	//	createScanner(input: string, initialOffset?: number): Scanner;
+	doValidation(document: TextDocument, program: Program, documentSettings?: LanguageSettings): Diagnostic[];
 	parseProgram(document: TextDocument): Program;
 	//	findDocumentHighlights(document: TextDocument, position: Position, rcasmDocument: RCASMDocument): DocumentHighlight[];
 	//	doComplete(document: TextDocument, position: Position, rcasmDocument: RCASMDocument, options?: CompletionConfiguration): CompletionList;
@@ -46,6 +48,7 @@ export function getLanguageService(options?: LanguageServiceOptions): LanguageSe
 	const rcasmParser = new Parser();
 	//	const rcasmHover = new RCASMHover(options && options.clientCapabilities);
 	//	const rcasmCompletion = new RCASMCompletion(options && options.clientCapabilities);
+		const rcasmValidation = new RCASMValidation();
 
 	// if (options && options.customDataProviders) {
 	// 	handleCustomDataProviders(options.customDataProviders);
@@ -53,6 +56,7 @@ export function getLanguageService(options?: LanguageServiceOptions): LanguageSe
 
 	return {
 		//		createScanner,
+		doValidation: rcasmValidation.doValidation.bind(rcasmValidation),
 		parseProgram: rcasmParser.parseProgram.bind(rcasmParser),
 		//		doComplete: rcasmCompletion.doComplete.bind(rcasmCompletion),
 		//		setCompletionParticipants: rcasmCompletion.setCompletionParticipants.bind(rcasmCompletion),

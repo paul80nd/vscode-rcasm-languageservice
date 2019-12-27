@@ -181,6 +181,10 @@ export type Program = {
 // 	};
 // }
 
+export interface LanguageSettings {
+	validate?: boolean;	
+}
+
 export interface LanguageServiceOptions {
 	// 	// /**
 	// 	//  * Provide data that could enhance the service's understanding of
