@@ -51,43 +51,43 @@ function assertCompletion(completions: CompletionList, expected: ItemDescription
 	}
 }
 
-export function testCompletionFor(value: string, expected: { count?: number, items?: ItemDescription[] }, settings?: rcasmLanguageService.CompletionConfiguration, lsOptions?: rcasmLanguageService.LanguageServiceOptions): void {
-	const offset = value.indexOf('|');
-	value = value.substr(0, offset) + value.substr(offset + 1);
+// export function testCompletionFor(value: string, expected: { count?: number, items?: ItemDescription[] }, settings?: rcasmLanguageService.CompletionConfiguration, lsOptions?: rcasmLanguageService.LanguageServiceOptions): void {
+// 	const offset = value.indexOf('|');
+// 	value = value.substr(0, offset) + value.substr(offset + 1);
 
-	const ls = rcasmLanguageService.getLanguageService(lsOptions);
+// 	const ls = rcasmLanguageService.getLanguageService(lsOptions);
 
-	const document = TextDocument.create('test://test/test.html', 'html', 0, value);
-	const position = document.positionAt(offset);
-	const htmlDoc = ls.parseRCASMDocument(document);
-	const list = ls.doComplete(document, position, htmlDoc, settings);
+// 	const document = TextDocument.create('test://test/test.html', 'html', 0, value);
+// 	const position = document.positionAt(offset);
+// 	const htmlDoc = ls.parseRCASMDocument(document);
+// 	const list = ls.doComplete(document, position, htmlDoc, settings);
 
-	// no duplicate labels
-	const labels = list.items.map(i => i.label).sort();
-	let previous = null;
-	for (const label of labels) {
-		assert.ok(previous !== label, `Duplicate label ${label} in ${labels.join(',')}`);
-		previous = label;
-	}
-	if (expected.count) {
-		assert.equal(list.items, expected.count);
-	}
-	if (expected.items) {
-		for (const item of expected.items) {
-			assertCompletion(list, item, document, offset);
-		}
-	}
-}
+// 	// no duplicate labels
+// 	const labels = list.items.map(i => i.label).sort();
+// 	let previous = null;
+// 	for (const label of labels) {
+// 		assert.ok(previous !== label, `Duplicate label ${label} in ${labels.join(',')}`);
+// 		previous = label;
+// 	}
+// 	if (expected.count) {
+// 		assert.equal(list.items, expected.count);
+// 	}
+// 	if (expected.items) {
+// 		for (const item of expected.items) {
+// 			assertCompletion(list, item, document, offset);
+// 		}
+// 	}
+// }
 
-export function testTagCompletion(value: string, expected: string | null): void {
-	const offset = value.indexOf('|');
-	value = value.substr(0, offset) + value.substr(offset + 1);
+// export function testTagCompletion(value: string, expected: string | null): void {
+// 	const offset = value.indexOf('|');
+// 	value = value.substr(0, offset) + value.substr(offset + 1);
 
-	const ls = rcasmLanguageService.getLanguageService();
+// 	const ls = rcasmLanguageService.getLanguageService();
 
-	const document = TextDocument.create('test://test/test.html', 'html', 0, value);
-	const position = document.positionAt(offset);
-	const htmlDoc = ls.parseRCASMDocument(document);
-	const actual = ls.doTagComplete(document, position, htmlDoc);
-	assert.equal(actual, expected);
-}
+// 	const document = TextDocument.create('test://test/test.html', 'html', 0, value);
+// 	const position = document.positionAt(offset);
+// 	const htmlDoc = ls.parseRCASMDocument(document);
+// 	const actual = ls.doTagComplete(document, position, htmlDoc);
+// 	assert.equal(actual, expected);
+// }
