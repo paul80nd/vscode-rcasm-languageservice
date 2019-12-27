@@ -1,5 +1,5 @@
 {
-  "name": "vscode-rcasm-languageservice",
+  "name": "@paul80nd/vscode-rcasm-languageservice",
   "version": "1.0.0",
   "description": "Language services for Relay Computer Assembly",
   "main": "./lib/umd/rcasmLanguageService.js",
@@ -9,6 +9,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/paul80nd/vscode-rcasm-languageservice"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
   },
   "license": "MIT",
   "devDependencies": {

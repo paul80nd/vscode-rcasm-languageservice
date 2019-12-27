@@ -13,3 +13,4 @@ yarn.lock
 tslint.json
 .travis.yml
 gulpfile.js
+azure-pipelines.yml
