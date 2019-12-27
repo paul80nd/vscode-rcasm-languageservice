@@ -4,8 +4,8 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { createScanner } from '../parser/htmlScanner';
-import { TokenType, ScannerState } from '../htmlLanguageTypes';
+import { createScanner } from '../parser/rcasmScanner';
+import { TokenType, ScannerState } from '../rcasmLanguageTypes';
 
 suite('HTML Scanner', () => {
 

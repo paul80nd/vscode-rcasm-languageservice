@@ -5,7 +5,7 @@
 
 import { testCompletionFor, testTagCompletion } from "./completionUtil";
 
-suite('HTML Completion', () => {
+suite('RCASM Completion', () => {
 	test('Complete', function(): any {
 		testCompletionFor('<|', {
 			items: [

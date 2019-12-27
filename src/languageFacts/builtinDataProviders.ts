@@ -3,21 +3,21 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { IHTMLDataProvider } from '../htmlLanguageTypes';
-import { HTMLDataProvider } from './dataProvider';
-import { htmlData } from './data/webCustomData';
+import { IRCASMDataProvider } from '../rcasmLanguageTypes';
+import { RCASMDataProvider } from './dataProvider';
+import { rcasmData } from './data/webCustomData';
 
-export const builtinDataProviders: IHTMLDataProvider[] = [
-	new HTMLDataProvider('html5', htmlData)
+export const builtinDataProviders: IRCASMDataProvider[] = [
+	new RCASMDataProvider('html5', rcasmData)
 ];
 
-const customDataProviders: IHTMLDataProvider[] = [];
+const customDataProviders: IRCASMDataProvider[] = [];
 
-export function getAllDataProviders(): IHTMLDataProvider[] {
+export function getAllDataProviders(): IRCASMDataProvider[] {
 	return builtinDataProviders.concat(customDataProviders);
 }
 
-export function handleCustomDataProviders(providers: IHTMLDataProvider[]) {
+export function handleCustomDataProviders(providers: IRCASMDataProvider[]) {
 	providers.forEach(p => {
 		customDataProviders.push(p);
 	});

@@ -6,14 +6,14 @@
 import { Position, Range, MarkupContent, MarkupKind } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-export interface HTMLFormatConfiguration {
+export interface RCASMFormatConfiguration {
 	tabSize?: number;
 	insertSpaces?: boolean;
 	indentEmptyLines?: boolean;
 	wrapLineLength?: number;
 	unformatted?: string;
 	contentUnformatted?: string;
-	indentInnerHtml?: boolean;
+	indentInnerRcasm?: boolean;
 	wrapAttributes?: 'auto' | 'force' | 'force-aligned' | 'force-expand-multiline' | 'aligned-multiple' | 'preserve' | 'preserve-aligned';
 	wrapAttributesIndentSize?: number;
 	preserveNewLines?: boolean;
@@ -89,7 +89,7 @@ export interface Scanner {
 	getScannerState(): ScannerState;
 }
 
-export declare type HTMLDocument = {
+export declare type RCASMDocument = {
 	roots: Node[];
 	findNodeBefore(offset: number): Node;
 	findNodeAt(offset: number): Node;
@@ -99,7 +99,7 @@ export interface DocumentContext {
 	resolveReference(ref: string, base?: string): string | undefined;
 }
 
-export interface HtmlAttributeValueContext {
+export interface RcasmAttributeValueContext {
 	document: TextDocument;
 	position: Position;
 	tag: string;
@@ -108,14 +108,14 @@ export interface HtmlAttributeValueContext {
 	range: Range;
 }
 
-export interface HtmlContentContext {
+export interface RcasmContentContext {
 	document: TextDocument;
 	position: Position;
 }
 
 export interface ICompletionParticipant {
-	onHtmlAttributeValue?: (context: HtmlAttributeValueContext) => void;
-	onHtmlContent?: (context: HtmlContentContext) => void;
+	onRcasmAttributeValue?: (context: RcasmAttributeValueContext) => void;
+	onRcasmContent?: (context: RcasmContentContext) => void;
 }
 
 export interface IReference {
@@ -149,14 +149,14 @@ export interface IValueSet {
 	values: IValueData[];
 }
 
-export interface HTMLDataV1 {
+export interface RCASMDataV1 {
 	version: 1 | 1.1;
 	tags?: ITagData[];
 	globalAttributes?: IAttributeData[];
 	valueSets?: IValueSet[];
 }
 
-export interface IHTMLDataProvider {
+export interface IRCASMDataProvider {
 	getId(): string;
 	isApplicable(languageId: string): boolean;
 
@@ -223,7 +223,7 @@ export interface LanguageServiceOptions {
 	 * Provide data that could enhance the service's understanding of
 	 * HTML tag / attribute / attribute-value
 	 */
-	customDataProviders?: IHTMLDataProvider[];
+	customDataProviders?: IRCASMDataProvider[];
 
 	/**
 	 * Describes the LSP capabilities the client supports.

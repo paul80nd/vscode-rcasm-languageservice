@@ -6,8 +6,8 @@
 import { FoldingRange, FoldingRangeKind } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
-import { TokenType } from '../htmlLanguageTypes';
-import { createScanner } from '../parser/htmlScanner';
+import { TokenType } from '../rcasmLanguageTypes';
+import { createScanner } from '../parser/rcasmScanner';
 import { isVoidElement } from '../languageFacts/fact';
 
 function limitRanges(ranges: FoldingRange[], rangeLimit: number) {

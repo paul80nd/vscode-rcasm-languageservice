@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import * as htmlLanguageService from '../htmlLanguageService';
+import * as rcasmLanguageService from '../rcasmLanguageService';
 
 import { CompletionList, CompletionItemKind, MarkupContent } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -51,15 +51,15 @@ function assertCompletion(completions: CompletionList, expected: ItemDescription
 	}
 }
 
-export function testCompletionFor(value: string, expected: { count?: number, items?: ItemDescription[] }, settings?: htmlLanguageService.CompletionConfiguration, lsOptions?: htmlLanguageService.LanguageServiceOptions): void {
+export function testCompletionFor(value: string, expected: { count?: number, items?: ItemDescription[] }, settings?: rcasmLanguageService.CompletionConfiguration, lsOptions?: rcasmLanguageService.LanguageServiceOptions): void {
 	const offset = value.indexOf('|');
 	value = value.substr(0, offset) + value.substr(offset + 1);
 
-	const ls = htmlLanguageService.getLanguageService(lsOptions);
+	const ls = rcasmLanguageService.getLanguageService(lsOptions);
 
 	const document = TextDocument.create('test://test/test.html', 'html', 0, value);
 	const position = document.positionAt(offset);
-	const htmlDoc = ls.parseHTMLDocument(document);
+	const htmlDoc = ls.parseRCASMDocument(document);
 	const list = ls.doComplete(document, position, htmlDoc, settings);
 
 	// no duplicate labels
@@ -83,11 +83,11 @@ export function testTagCompletion(value: string, expected: string | null): void 
 	const offset = value.indexOf('|');
 	value = value.substr(0, offset) + value.substr(offset + 1);
 
-	const ls = htmlLanguageService.getLanguageService();
+	const ls = rcasmLanguageService.getLanguageService();
 
 	const document = TextDocument.create('test://test/test.html', 'html', 0, value);
 	const position = document.positionAt(offset);
-	const htmlDoc = ls.parseHTMLDocument(document);
+	const htmlDoc = ls.parseRCASMDocument(document);
 	const actual = ls.doTagComplete(document, position, htmlDoc);
 	assert.equal(actual, expected);
 }

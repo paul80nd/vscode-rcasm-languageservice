@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { HTMLFormatConfiguration } from '../htmlLanguageTypes';
+import { RCASMFormatConfiguration } from '../rcasmLanguageTypes';
 import { Range, TextEdit, Position } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { IBeautifyHTMLOptions, html_beautify } from '../beautify/beautify-html';
 import { repeat } from '../utils/strings';
 
-export function format(document: TextDocument, range: Range | undefined, options: HTMLFormatConfiguration): TextEdit[] {
+export function format(document: TextDocument, range: Range | undefined, options: RCASMFormatConfiguration): TextEdit[] {
 	let value = document.getText();
 	let includesEnd = true;
 	let initialIndentLevel = 0;
@@ -71,7 +71,7 @@ export function format(document: TextDocument, range: Range | undefined, options
 		wrap_line_length: getFormatOption(options, 'wrapLineLength', 120),
 		unformatted: getTagsFormatOption(options, 'unformatted', void 0),
 		content_unformatted: getTagsFormatOption(options, 'contentUnformatted', void 0),
-		indent_inner_html: getFormatOption(options, 'indentInnerHtml', false),
+		indent_inner_html: getFormatOption(options, 'indentInnerRcasm', false),
 		preserve_newlines: getFormatOption(options, 'preserveNewLines', true),
 		max_preserve_newlines: getFormatOption(options, 'maxPreserveNewLines', 32786),
 		indent_handlebars: getFormatOption(options, 'indentHandlebars', false),
@@ -100,7 +100,7 @@ function trimLeft(str: string) {
 	return str.replace(/^\s+/, '');
 }
 
-function getFormatOption(options: HTMLFormatConfiguration, key: keyof HTMLFormatConfiguration, dflt: any): any {
+function getFormatOption(options: RCASMFormatConfiguration, key: keyof RCASMFormatConfiguration, dflt: any): any {
 	if (options && options.hasOwnProperty(key)) {
 		const value = options[key];
 		if (value !== null) {
@@ -110,7 +110,7 @@ function getFormatOption(options: HTMLFormatConfiguration, key: keyof HTMLFormat
 	return dflt;
 }
 
-function getTagsFormatOption(options: HTMLFormatConfiguration, key: keyof HTMLFormatConfiguration, dflt: string[] | undefined): string[] | undefined {
+function getTagsFormatOption(options: RCASMFormatConfiguration, key: keyof RCASMFormatConfiguration, dflt: string[] | undefined): string[] | undefined {
 	const list = <string>getFormatOption(options, key, null);
 	if (typeof list === 'string') {
 		if (list.length > 0) {
@@ -121,7 +121,7 @@ function getTagsFormatOption(options: HTMLFormatConfiguration, key: keyof HTMLFo
 	return dflt;
 }
 
-function computeIndentLevel(content: string, offset: number, options: HTMLFormatConfiguration): number {
+function computeIndentLevel(content: string, offset: number, options: RCASMFormatConfiguration): number {
 	let i = offset;
 	let nChars = 0;
 	const tabSize = options.tabSize || 4;

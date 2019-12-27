@@ -3,15 +3,15 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { HTMLDocument } from '../parser/htmlParser';
-import { createScanner } from '../parser/htmlScanner';
+import { RCASMDocument } from '../parser/rcasmParser';
+import { createScanner } from '../parser/rcasmScanner';
 import { Range, Position, DocumentHighlightKind, DocumentHighlight } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { TokenType } from '../htmlLanguageTypes';
+import { TokenType } from '../rcasmLanguageTypes';
 
-export function findDocumentHighlights(document: TextDocument, position: Position, htmlDocument: HTMLDocument): DocumentHighlight[] {
+export function findDocumentHighlights(document: TextDocument, position: Position, rcasmDocument: RCASMDocument): DocumentHighlight[] {
 	const offset = document.offsetAt(position);
-	const node = htmlDocument.findNodeAt(offset);
+	const node = rcasmDocument.findNodeAt(offset);
 	if (!node.tag) {
 		return [];
 	}

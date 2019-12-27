@@ -7,7 +7,7 @@
 import 'mocha';
 import * as assert from 'assert';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { getFoldingRanges } from '../services/htmlFolding';
+import { getFoldingRanges } from '../services/rcasmFolding';
 
 interface ExpectedIndentRange {
 	startLine: number;

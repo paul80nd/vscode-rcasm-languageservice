@@ -4,15 +4,15 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TextDocument, Position, Range } from "vscode-languageserver-types";
-import { HTMLDocument } from "../parser/htmlParser";
+import { RCASMDocument } from "../parser/rcasmParser";
 
 export function findMatchingTagPosition(
   document: TextDocument,
   position: Position,
-  htmlDocument: HTMLDocument
+  rcasmDocument: RCASMDocument
 ): Position | null {
   const offset = document.offsetAt(position);
-  const node = htmlDocument.findNodeAt(offset);
+  const node = rcasmDocument.findNodeAt(offset);
 
   if (!node.tag) {
     return null;

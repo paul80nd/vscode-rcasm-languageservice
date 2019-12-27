@@ -3,26 +3,26 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { HTMLDocument } from '../parser/htmlParser';
-import { createScanner } from '../parser/htmlScanner';
+import { RCASMDocument } from '../parser/rcasmParser';
+import { createScanner } from '../parser/rcasmScanner';
 import { Range, Position, Hover, MarkedString, MarkupContent, MarkupKind } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { TokenType, ClientCapabilities } from '../htmlLanguageTypes';
+import { TokenType, ClientCapabilities } from '../rcasmLanguageTypes';
 import { getAllDataProviders } from '../languageFacts/builtinDataProviders';
 import { isDefined } from '../utils/object';
 import { generateDocumentation } from '../languageFacts/dataProvider';
 
-export class HTMLHover {
+export class RCASMHover {
 	private supportsMarkdown: boolean | undefined;
 
 	constructor(private clientCapabilities: ClientCapabilities | undefined) { }
 
-	doHover(document: TextDocument, position: Position, htmlDocument: HTMLDocument): Hover | null {
+	doHover(document: TextDocument, position: Position, rcasmDocument: RCASMDocument): Hover | null {
 		const convertContents = this.convertContents.bind(this);
 		const doesSupportMarkdown = this.doesSupportMarkdown();
 
 		const offset = document.offsetAt(position);
-		const node = htmlDocument.findNodeAt(offset);
+		const node = rcasmDocument.findNodeAt(offset);
 		if (!node || !node.tag) {
 			return null;
 		}

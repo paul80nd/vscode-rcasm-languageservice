@@ -3,9 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createScanner } from './htmlScanner';
+import { createScanner } from './rcasmScanner';
 import { findFirst } from '../utils/arrays';
-import { TokenType } from '../htmlLanguageTypes';
+import { TokenType } from '../rcasmLanguageTypes';
 import { isVoidElement } from '../languageFacts/fact';
 
 export class Node {
@@ -53,17 +53,17 @@ export class Node {
 	}
 }
 
-export interface HTMLDocument {
+export interface RCASMDocument {
 	roots: Node[];
 	findNodeBefore(offset: number): Node;
 	findNodeAt(offset: number): Node;
 }
 
-export function parse(text: string): HTMLDocument {
+export function parse(text: string): RCASMDocument {
 	const scanner = createScanner(text);
 
-	const htmlDocument = new Node(0, text.length, [], void 0);
-	let curr = htmlDocument;
+	const rcasmDocument = new Node(0, text.length, [], void 0);
+	let curr = rcasmDocument;
 	let endTagStart: number = -1;
 	let endTagName: string | null = null;
 	let pendingAttribute: string | null = null;
@@ -148,8 +148,8 @@ export function parse(text: string): HTMLDocument {
 		curr = curr.parent;
 	}
 	return {
-		roots: htmlDocument.children,
-		findNodeBefore: htmlDocument.findNodeBefore.bind(htmlDocument),
-		findNodeAt: htmlDocument.findNodeAt.bind(htmlDocument)
+		roots: rcasmDocument.children,
+		findNodeBefore: rcasmDocument.findNodeBefore.bind(rcasmDocument),
+		findNodeAt: rcasmDocument.findNodeAt.bind(rcasmDocument)
 	};
 }

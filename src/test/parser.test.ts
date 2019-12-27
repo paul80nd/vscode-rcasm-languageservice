@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import { Node, parse } from '../parser/htmlParser';
+import { Node, parse } from '../parser/rcasmParser';
 
 suite('HTML Parser', () => {
 

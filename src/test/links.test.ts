@@ -6,7 +6,7 @@
 
 import * as assert from 'assert';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import * as htmlLanguageService from '../htmlLanguageService';
+import * as htmlLanguageService from '../rcasmLanguageService';
 import * as url from 'url';
 
 suite('HTML Link Detection', () => {

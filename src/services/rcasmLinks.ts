@@ -3,13 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { createScanner } from '../parser/htmlScanner';
+import { createScanner } from '../parser/rcasmScanner';
 import { Range, DocumentLink } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import * as strings from '../utils/strings';
 import { URI as Uri } from 'vscode-uri';
 
-import { TokenType, DocumentContext } from '../htmlLanguageTypes';
+import { TokenType, DocumentContext } from '../rcasmLanguageTypes';
 
 function normalizeRef(url: string): string {
 	const first = url[0];

@@ -5,7 +5,7 @@
 
 import { Range } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { getLanguageService } from '../htmlLanguageService';
+import { getLanguageService } from '../rcasmLanguageService';
 import * as assert from 'assert';
 
 suite('JSON Formatter', () => {

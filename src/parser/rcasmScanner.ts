@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as nls from 'vscode-nls';
-import { TokenType, ScannerState, Scanner } from '../htmlLanguageTypes';
+import { TokenType, ScannerState, Scanner } from '../rcasmLanguageTypes';
 const localize = nls.loadMessageBundle();
 
 class MultiLineStream {
@@ -153,7 +153,7 @@ const _WSP = ' '.charCodeAt(0);
 const _TAB = '\t'.charCodeAt(0);
 
 
-const htmlScriptContents: { [key: string]: boolean } = {
+const rcasmScriptContents: { [key: string]: boolean } = {
 	'text/x-handlebars-template': true
 };
 
@@ -302,7 +302,7 @@ export function createScanner(input: string, initialOffset = 0, initialState: Sc
 				}
 				if (stream.advanceIfChar(_RAN)) { // >
 					if (lastTag === 'script') {
-						if (lastTypeValue && htmlScriptContents[lastTypeValue]) {
+						if (lastTypeValue && rcasmScriptContents[lastTypeValue]) {
 							// stay in html
 							state = ScannerState.WithinContent;
 						} else {

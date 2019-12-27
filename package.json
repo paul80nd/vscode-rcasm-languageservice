@@ -1,19 +1,16 @@
 {
-  "name": "vscode-html-languageservice",
-  "version": "3.0.4-next.12",
-  "description": "Language service for HTML",
-  "main": "./lib/umd/htmlLanguageService.js",
-  "typings": "./lib/umd/htmlLanguageService",
-  "module": "./lib/esm/htmlLanguageService.js",
-  "author": "Microsoft Corporation",
+  "name": "vscode-rcasm-languageservice",
+  "version": "1.0.0",
+  "description": "Language services for Relay Computer Assembly",
+  "main": "./lib/umd/rcasmLanguageService.js",
+  "typings": "./lib/umd/rcasmLanguageService",
+  "module": "./lib/esm/rcasmLanguageService.js",
+  "author": "Paul Law (forked from Microsoft Corporation)",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Microsoft/vscode-html-languageservice"
+    "url": "https://github.com/paul80nd/vscode-rcasm-languageservice"
   },
   "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/Microsoft/vscode-html-languageservice"
-  },
   "devDependencies": {
     "@types/mocha": "^5.2.7",
     "@types/node": "^10.12.21",

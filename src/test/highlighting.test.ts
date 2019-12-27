@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import * as htmlLanguageService from '../htmlLanguageService';
+import * as htmlLanguageService from '../rcasmLanguageService';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 
@@ -20,7 +20,7 @@ suite('HTML Highlighting', () => {
 
 		const position = document.positionAt(offset);
 		const ls = htmlLanguageService.getLanguageService();
-		const htmlDoc = ls.parseHTMLDocument(document);
+		const htmlDoc = ls.parseRCASMDocument(document);
 
 		const highlights = ls.findDocumentHighlights(document, position, htmlDoc);
 		assert.equal(highlights.length, expectedMatches.length);

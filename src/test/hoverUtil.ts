@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import * as htmlLanguageService from '../htmlLanguageService';
+import * as htmlLanguageService from '../rcasmLanguageService';
 import { MarkupContent } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
@@ -16,7 +16,7 @@ export function assertHover(value: string, expectedHoverContent: MarkupContent |
 
 	const position = document.positionAt(offset);
 	const ls = htmlLanguageService.getLanguageService();
-	const htmlDoc = ls.parseHTMLDocument(document);
+	const htmlDoc = ls.parseRCASMDocument(document);
 
 	const hover = ls.doHover(document, position, htmlDoc);
 	assert.deepEqual(hover && hover.contents, expectedHoverContent);
@@ -31,7 +31,7 @@ export function assertHover2(value: string, contents: string | MarkupContent, ra
 
 	const position = document.positionAt(offset);
 	const ls = htmlLanguageService.getLanguageService();
-	const htmlDoc = ls.parseHTMLDocument(document);
+	const htmlDoc = ls.parseRCASMDocument(document);
 
 	const hover = ls.doHover(document, position, htmlDoc);
 	if (hover) {

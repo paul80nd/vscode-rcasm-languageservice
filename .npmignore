@@ -1,7 +1,7 @@
 .vscode/
 lib/**/*.js.map
 lib/*/*/*.d.ts
-!lib/*/*/htmlScanner.d.ts
+!lib/*/*/rcasmScanner.d.ts
 lib/*/test/
 src/
 test/

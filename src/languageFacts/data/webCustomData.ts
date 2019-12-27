@@ -4,9 +4,9 @@
  *--------------------------------------------------------------------------------------------*/
 // file generated from vscode-web-custom-data NPM package
 
-import { HTMLDataV1 } from '../../htmlLanguageTypes';
+import { RCASMDataV1 as RCASMDataV1 } from '../../rcasmLanguageTypes';
 
-export const htmlData : HTMLDataV1 = {
+export const rcasmData : RCASMDataV1 = {
 	"version": 1.1,
 	"tags": [
 		{

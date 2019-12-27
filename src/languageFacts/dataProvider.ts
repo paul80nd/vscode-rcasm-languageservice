@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ITagData, IAttributeData, IValueData, IHTMLDataProvider, HTMLDataV1 } from '../htmlLanguageTypes';
+import { ITagData, IAttributeData, IValueData, IRCASMDataProvider, RCASMDataV1 } from '../rcasmLanguageTypes';
 import { MarkupContent } from 'vscode-languageserver-types';
 import { normalizeMarkupContent } from '../utils/markup';
 
-export class HTMLDataProvider implements IHTMLDataProvider {
+export class RCASMDataProvider implements IRCASMDataProvider {
 	isApplicable() {
 		return true;
 	}
@@ -23,7 +23,7 @@ export class HTMLDataProvider implements IHTMLDataProvider {
 	 * In the future when the provider handles multiple versions of HTML custom data,
 	 * use the latest implementation for unversioned data
 	 */
-	constructor(private readonly id: string, customData: HTMLDataV1) {
+	constructor(private readonly id: string, customData: RCASMDataV1) {
 		this._tags = customData.tags || [];
 		this._globalAttributes = customData.globalAttributes || [];
 

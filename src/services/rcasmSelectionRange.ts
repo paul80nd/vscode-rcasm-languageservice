@@ -4,9 +4,9 @@
  */
 import { Range, Position, SelectionRange } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { createScanner } from '../parser/htmlScanner';
-import { parse, Node } from '../parser/htmlParser';
-import { TokenType } from '../htmlLanguageTypes';
+import { createScanner } from '../parser/rcasmScanner';
+import { parse, Node } from '../parser/rcasmParser';
+import { TokenType } from '../rcasmLanguageTypes';
 
 export function getSelectionRanges(document: TextDocument, positions: Position[]): SelectionRange[] {
 
@@ -34,9 +34,9 @@ export function getSelectionRanges(document: TextDocument, positions: Position[]
 }
 
 function getApplicableRanges(document: TextDocument, position: Position): [number, number][] {
-	const htmlDoc = parse(document.getText());
+	const rcasmDoc = parse(document.getText());
 	const currOffset = document.offsetAt(position);
-	const currNode = htmlDoc.findNodeAt(currOffset);
+	const currNode = rcasmDoc.findNodeAt(currOffset);
 
 	let result = getAllParentTagRanges(currNode);
 

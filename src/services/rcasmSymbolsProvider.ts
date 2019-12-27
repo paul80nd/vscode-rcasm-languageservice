@@ -5,12 +5,12 @@
 
 import { Location, Range, SymbolInformation, SymbolKind } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { HTMLDocument, Node } from '../parser/htmlParser';
+import { RCASMDocument, Node } from '../parser/rcasmParser';
 
-export function findDocumentSymbols(document: TextDocument, htmlDocument: HTMLDocument): SymbolInformation[] {
+export function findDocumentSymbols(document: TextDocument, rcasmDocument: RCASMDocument): SymbolInformation[] {
 	const symbols = <SymbolInformation[]>[];
 
-	htmlDocument.roots.forEach(node => {
+	rcasmDocument.roots.forEach(node => {
 		provideFileSymbolsInternal(document, node, '', symbols);
 	});
 

@@ -5,10 +5,10 @@
 
 import { Position, CompletionList, CompletionItemKind, Range, TextEdit, InsertTextFormat, CompletionItem, MarkupKind } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { HTMLDocument, Node } from '../parser/htmlParser';
-import { createScanner } from '../parser/htmlScanner';
-import { CompletionConfiguration, ICompletionParticipant, ScannerState, TokenType, ClientCapabilities } from '../htmlLanguageTypes';
-import { entities } from '../parser/htmlEntities';
+import { RCASMDocument, Node } from '../parser/rcasmParser';
+import { createScanner } from '../parser/rcasmScanner';
+import { CompletionConfiguration, ICompletionParticipant, ScannerState, TokenType, ClientCapabilities } from '../rcasmLanguageTypes';
+import { entities } from '../parser/rcasmEntities';
 
 import * as nls from 'vscode-nls';
 import { isLetterOrDigit, endsWith, startsWith } from '../utils/strings';
@@ -18,7 +18,7 @@ import { isDefined } from '../utils/object';
 import { generateDocumentation } from '../languageFacts/dataProvider';
 const localize = nls.loadMessageBundle();
 
-export class HTMLCompletion {
+export class RCASMCompletion {
 	completionParticipants: ICompletionParticipant[];
 
 	private supportsMarkdown: boolean | undefined;
@@ -31,12 +31,12 @@ export class HTMLCompletion {
 		this.completionParticipants = registeredCompletionParticipants || [];
 	}
 
-	doComplete(document: TextDocument, position: Position, htmlDocument: HTMLDocument, settings?: CompletionConfiguration): CompletionList {
-		const result = this._doComplete(document, position, htmlDocument, settings);
+	doComplete(document: TextDocument, position: Position, rcasmDocument: RCASMDocument, settings?: CompletionConfiguration): CompletionList {
+		const result = this._doComplete(document, position, rcasmDocument, settings);
 		return this.convertCompletionList(result);
 	}
 
-	private _doComplete(document: TextDocument, position: Position, htmlDocument: HTMLDocument, settings?: CompletionConfiguration): CompletionList {
+	private _doComplete(document: TextDocument, position: Position, rcasmDocument: RCASMDocument, settings?: CompletionConfiguration): CompletionList {
 		const result: CompletionList = {
 			isIncomplete: false,
 			items: []
@@ -48,7 +48,7 @@ export class HTMLCompletion {
 		const text = document.getText();
 		const offset = document.offsetAt(position);
 
-		const node = htmlDocument.findNodeBefore(offset);
+		const node = rcasmDocument.findNodeBefore(offset);
 		if (!node) {
 			return result;
 		}
@@ -224,8 +224,8 @@ export class HTMLCompletion {
 				node.children.forEach(child => addNodeDataAttributes(child));
 			}
 
-			if (htmlDocument) {
-				htmlDocument.roots.forEach(root => addNodeDataAttributes(root));
+			if (rcasmDocument) {
+				rcasmDocument.roots.forEach(root => addNodeDataAttributes(root));
 			}
 			Object.keys(dataAttributes).forEach(attr => result.items.push({
 				label: attr,
@@ -265,8 +265,8 @@ export class HTMLCompletion {
 			if (completionParticipants.length > 0) {
 				const fullRange = getReplaceRange(valueStart, valueEnd);
 				for (const participant of completionParticipants) {
-					if (participant.onHtmlAttributeValue) {
-						participant.onHtmlAttributeValue({ document, position, tag, attribute, value: valuePrefix, range: fullRange });
+					if (participant.onRcasmAttributeValue) {
+						participant.onRcasmAttributeValue({ document, position, tag, attribute, value: valuePrefix, range: fullRange });
 					}
 				}
 			}
@@ -301,8 +301,8 @@ export class HTMLCompletion {
 
 		function collectInsideContent(): CompletionList {
 			for (const participant of completionParticipants) {
-				if (participant.onHtmlContent) {
-					participant.onHtmlContent({ document, position });
+				if (participant.onRcasmContent) {
+					participant.onRcasmContent({ document, position });
 				}
 			}
 
@@ -446,14 +446,14 @@ export class HTMLCompletion {
 		return result;
 	}
 
-	doTagComplete(document: TextDocument, position: Position, htmlDocument: HTMLDocument): string | null {
+	doTagComplete(document: TextDocument, position: Position, rcasmDocument: RCASMDocument): string | null {
 		const offset = document.offsetAt(position);
 		if (offset <= 0) {
 			return null;
 		}
 		const char = document.getText().charAt(offset - 1);
 		if (char === '>') {
-			const node = htmlDocument.findNodeBefore(offset);
+			const node = rcasmDocument.findNodeBefore(offset);
 			if (node && node.tag && !isVoidElement(node.tag) && node.start < offset && (!node.endTagStart || node.endTagStart > offset)) {
 				const scanner = createScanner(document.getText(), node.start);
 				let token = scanner.scan();
@@ -465,7 +465,7 @@ export class HTMLCompletion {
 				}
 			}
 		} else if (char === '/') {
-			let node: Node | undefined = htmlDocument.findNodeBefore(offset);
+			let node: Node | undefined = rcasmDocument.findNodeBefore(offset);
 			while (node && node.closed) {
 				node = node.parent;
 			}

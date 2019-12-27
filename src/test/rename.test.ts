@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import * as htmlLanguageService from '../htmlLanguageService';
+import * as htmlLanguageService from '../rcasmLanguageService';
 import { WorkspaceEdit } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { isUndefined } from 'util';
@@ -17,7 +17,7 @@ export function testRename(value: string, newName: string, expectedDocContent: s
 
   const document = TextDocument.create('test://test/test.html', 'html', 0, value);
   const position = document.positionAt(offset);
-  const htmlDoc = ls.parseHTMLDocument(document);
+  const htmlDoc = ls.parseRCASMDocument(document);
 
   const workspaceEdit: WorkspaceEdit | null = ls.doRename(document, position, newName, htmlDoc);
 
@@ -42,7 +42,7 @@ export function testNoRename(value: string, newName: string): void {
 
   const document = TextDocument.create('test://test/test.html', 'html', 0, value);
   const position = document.positionAt(offset);
-  const htmlDoc = ls.parseHTMLDocument(document);
+  const htmlDoc = ls.parseRCASMDocument(document);
 
   const workspaceEdit: WorkspaceEdit | null = ls.doRename(document, position, newName, htmlDoc);
 

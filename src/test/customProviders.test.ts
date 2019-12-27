@@ -3,11 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { getLanguageService, ITagData, IAttributeData, newHTMLDataProvider } from '../htmlLanguageService';
+import { getLanguageService, ITagData, IAttributeData, newRCASMDataProvider } from '../rcasmLanguageService';
 
 import { testCompletionFor } from './completionUtil';
 import { assertHover, assertHover2 } from './hoverUtil';
-import { IValueSet } from '../htmlLanguageTypes';
+import { IValueSet } from '../rcasmLanguageTypes';
 
 suite('HTML Custom Tag Provider', () => {
 	const tags: ITagData[] = [
@@ -58,7 +58,7 @@ suite('HTML Custom Tag Provider', () => {
 		}
 	];
 
-	const provider = newHTMLDataProvider('test', {
+	const provider = newRCASMDataProvider('test', {
 		version: 1,
 		tags,
 		globalAttributes,

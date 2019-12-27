@@ -7,7 +7,7 @@ import 'mocha';
 import * as assert from 'assert';
 import { SelectionRange } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { getLanguageService } from '../htmlLanguageService';
+import { getLanguageService } from '../rcasmLanguageService';
 
 function assertRanges(content: string, expected: (number | string)[][]): void {
 	let message = `${content} gives selection range:\n`;

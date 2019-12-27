@@ -4,16 +4,16 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { TextDocument, Position, WorkspaceEdit, Range, TextEdit } from 'vscode-languageserver-types';
-import { HTMLDocument, Node } from '../parser/htmlParser';
+import { RCASMDocument, Node } from '../parser/rcasmParser';
 
 export function doRename(
   document: TextDocument,
   position: Position,
   newName: string,
-  htmlDocument: HTMLDocument
+  rcasmDocument: RCASMDocument
 ): WorkspaceEdit | null {
   const offset = document.offsetAt(position);
-  const node = htmlDocument.findNodeAt(offset);
+  const node = rcasmDocument.findNodeAt(offset);
 
   if (!node.tag) {
     return null;

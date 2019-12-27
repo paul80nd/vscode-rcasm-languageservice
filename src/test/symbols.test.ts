@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import * as htmlLanguageService from '../htmlLanguageService';
+import * as htmlLanguageService from '../rcasmLanguageService';
 
 import { SymbolInformation, SymbolKind, Location, Range } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
@@ -24,7 +24,7 @@ suite('HTML Symbols', () => {
 	const testSymbolsFor = function (value: string, expected: SymbolInformation[]) {
 		const ls = htmlLanguageService.getLanguageService();
 		const document = TextDocument.create(TEST_URI, 'html', 0, value);
-		const htmlDoc = ls.parseHTMLDocument(document);
+		const htmlDoc = ls.parseRCASMDocument(document);
 		const symbols = ls.findDocumentSymbols(document, htmlDoc);
 		assertSymbols(symbols, expected);
 	};

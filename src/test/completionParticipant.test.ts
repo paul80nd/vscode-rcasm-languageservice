@@ -4,11 +4,11 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import * as htmlLanguageService from '../htmlLanguageService';
+import * as htmlLanguageService from '../rcasmLanguageService';
 
 import { Position } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { HtmlAttributeValueContext, HtmlContentContext } from '../htmlLanguageService';
+import { RcasmAttributeValueContext, RcasmContentContext } from '../rcasmLanguageService';
 
 export interface ExpectedHtmlAttributeValue {
   tag: string;
@@ -20,7 +20,7 @@ export interface ExpectedHtmlAttributeValue {
 export interface ExpectedHtmlContent {
 }
 
-suite('HTML Completion Participant', () => {
+suite('RCASM Completion Participant', () => {
 
   const prepareDocument = (value: string): { document: TextDocument, position: Position } => {
     const offset = value.indexOf('|');
@@ -36,7 +36,7 @@ suite('HTML Completion Participant', () => {
 
     const actuals: ExpectedHtmlAttributeValue[] = [];
     const participant: htmlLanguageService.ICompletionParticipant = {
-      onHtmlAttributeValue: (context: HtmlAttributeValueContext) => {
+      onRcasmAttributeValue: (context: RcasmAttributeValueContext) => {
         const replaceContent = document.getText().substring(document.offsetAt(context.range.start), document.offsetAt(context.range.end));
         assert.equal(context.document, document);
         assert.equal(context.position, position);
@@ -49,7 +49,7 @@ suite('HTML Completion Participant', () => {
       }
     };
     ls.setCompletionParticipants([participant]);
-    const htmlDoc = ls.parseHTMLDocument(document);
+    const htmlDoc = ls.parseRCASMDocument(document);
     const list = ls.doComplete(document, position, htmlDoc);
 
     const c = (a1: ExpectedHtmlAttributeValue, a2: ExpectedHtmlAttributeValue) => {
@@ -64,12 +64,12 @@ suite('HTML Completion Participant', () => {
 
     const actuals: {}[] = [];
     const participant: htmlLanguageService.ICompletionParticipant = {
-      onHtmlContent: (context: HtmlContentContext) => {
+      onRcasmContent: (context: RcasmContentContext) => {
         actuals.push(Object.create(null));
       }
     };
     ls.setCompletionParticipants([participant]);
-    const htmlDoc = ls.parseHTMLDocument(document);
+    const htmlDoc = ls.parseRCASMDocument(document);
     const list = ls.doComplete(document, position, htmlDoc);
     assert.deepEqual(actuals.length, expected.length);
   };

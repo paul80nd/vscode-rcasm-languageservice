@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import * as assert from 'assert';
-import * as htmlLanguageService from '../htmlLanguageService';
+import * as htmlLanguageService from '../rcasmLanguageService';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 export function testMatchingTagPosition(value: string): void {
@@ -20,7 +20,7 @@ export function testMatchingTagPosition(value: string): void {
 
   const document = TextDocument.create('test://test/test.html', 'html', 0, value);
   const position = document.positionAt(offset);
-  const htmlDoc = ls.parseHTMLDocument(document);
+  const htmlDoc = ls.parseRCASMDocument(document);
 
   const mirrorPosition = ls.findMatchingTagPosition(document, position, htmlDoc);
   if (!mirrorPosition) {
