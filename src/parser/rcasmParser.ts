@@ -1,155 +1,499 @@
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
+'use strict';
 
-import { createScanner } from './rcasmScanner';
-import { findFirst } from '../utils/arrays';
+import { Scanner, IToken } from './rcasmScanner';
+import { ParseError, RcasmIssueType } from './rcasmErrors';
+import * as nodes from './rcasmNodes';
 import { TokenType } from '../rcasmLanguageTypes';
-import { isVoidElement } from '../languageFacts/fact';
+import { TextDocument } from 'vscode-languageserver-textdocument';
 
-export class Node {
-	public tag: string | undefined;
-	public closed: boolean = false;
-	public startTagEnd: number | undefined;
-	public endTagStart: number | undefined;
-	public attributes: { [name: string]: string | null } | undefined;
-	public get attributeNames(): string[] { return this.attributes ? Object.keys(this.attributes) : []; }
-	constructor(public start: number, public end: number, public children: Node[], public parent?: Node) {
-	}
-	public isSameTag(tagInLowerCase: string) {
-		return this.tag && tagInLowerCase && this.tag.length === tagInLowerCase.length && this.tag.toLowerCase() === tagInLowerCase;
-	}
-	public get firstChild(): Node | undefined { return this.children[0]; }
-	public get lastChild(): Node | undefined { return this.children.length ? this.children[this.children.length - 1] : void 0; }
+const staticOpcodeTable: { [code: string]: nodes.OpcodeType; } = {};
+staticOpcodeTable['clr'] = nodes.OpcodeType.CLR;
+staticOpcodeTable['add'] = nodes.OpcodeType.ADD;
+staticOpcodeTable['inc'] = nodes.OpcodeType.INC;
+staticOpcodeTable['and'] = nodes.OpcodeType.AND;
+staticOpcodeTable['orr'] = nodes.OpcodeType.ORR;
+staticOpcodeTable['eor'] = nodes.OpcodeType.EOR;
+staticOpcodeTable['not'] = nodes.OpcodeType.NOT;
+staticOpcodeTable['shl'] = nodes.OpcodeType.SHL;
+staticOpcodeTable['mov'] = nodes.OpcodeType.MOV;
+staticOpcodeTable['ldi'] = nodes.OpcodeType.LDI;
+staticOpcodeTable['jmp'] = nodes.OpcodeType.JMP;
+staticOpcodeTable['jsr'] = nodes.OpcodeType.JSR;
+staticOpcodeTable['rts'] = nodes.OpcodeType.RTS;
+staticOpcodeTable['bne'] = nodes.OpcodeType.BNE;
+staticOpcodeTable['beq'] = nodes.OpcodeType.BEQ;
+staticOpcodeTable['blt'] = nodes.OpcodeType.BLT;
+staticOpcodeTable['ble'] = nodes.OpcodeType.BLE;
+staticOpcodeTable['bmi'] = nodes.OpcodeType.BMI;
+staticOpcodeTable['bcs'] = nodes.OpcodeType.BCS;
 
-	public findNodeBefore(offset: number): Node {
-		const idx = findFirst(this.children, c => offset <= c.start) - 1;
-		if (idx >= 0) {
-			const child = this.children[idx];
-			if (offset > child.start) {
-				if (offset < child.end) {
-					return child.findNodeBefore(offset);
+const staticRegisterTable: { [code: string]: nodes.RegisterType; } = {};
+staticRegisterTable['a'] = nodes.RegisterType.A;
+staticRegisterTable['b'] = nodes.RegisterType.B;
+staticRegisterTable['c'] = nodes.RegisterType.C;
+staticRegisterTable['d'] = nodes.RegisterType.D;
+staticRegisterTable['m1'] = nodes.RegisterType.M1;
+staticRegisterTable['m2'] = nodes.RegisterType.M2;
+staticRegisterTable['m'] = nodes.RegisterType.M;
+staticRegisterTable['x'] = nodes.RegisterType.X;
+staticRegisterTable['y'] = nodes.RegisterType.Y;
+staticRegisterTable['xy'] = nodes.RegisterType.XY;
+staticRegisterTable['j1'] = nodes.RegisterType.J1;
+staticRegisterTable['j2'] = nodes.RegisterType.J2;
+staticRegisterTable['j'] = nodes.RegisterType.J;
+
+/// <summary>
+/// A parser for rcasm.
+/// </summary>
+export class Parser {
+
+	public scanner: Scanner;
+	public token: IToken;
+	public prevToken?: IToken;
+
+	private lastErrorToken?: IToken;
+
+	constructor(scnr: Scanner = new Scanner()) {
+		this.scanner = scnr;
+		this.token = { type: TokenType.EOF, offset: -1, len: 0, text: '' };
+		this.prevToken = undefined!;
+	}
+
+	public peek(type: TokenType): boolean {
+		return type === this.token.type;
+	}
+
+	public peekIsBeyondOpcode(): boolean {
+		return this.peek(TokenType.Comment)
+			|| this.peek(TokenType.EOL)
+			|| this.peek(TokenType.EOF);
+	}
+
+	public consumeToken(): void {
+		this.prevToken = this.token;
+		this.token = this.scanner.scan();
+	}
+
+	public accept(type: TokenType) {
+		if (type === this.token.type) {
+			this.consumeToken();
+			return true;
+		}
+		return false;
+	}
+
+	public resync(resyncTokens: TokenType[] | undefined, resyncStopTokens: TokenType[] | undefined): boolean {
+		while (true) {
+			if (resyncTokens && resyncTokens.indexOf(this.token.type) !== -1) {
+				this.consumeToken();
+				return true;
+			} else if (resyncStopTokens && resyncStopTokens.indexOf(this.token.type) !== -1) {
+				return true;
+			} else {
+				if (this.token.type === TokenType.EOF) {
+					return false;
 				}
-				const lastChild = child.lastChild;
-				if (lastChild && lastChild.end === child.end) {
-					return child.findNodeBefore(offset);
-				}
-				return child;
+				this.token = this.scanner.scan();
 			}
 		}
-		return this;
 	}
 
-	public findNodeAt(offset: number): Node {
-		const idx = findFirst(this.children, c => offset <= c.start) - 1;
-		if (idx >= 0) {
-			const child = this.children[idx];
-			if (offset > child.start && offset <= child.end) {
-				return child.findNodeAt(offset);
+	public create(ctor: nodes.NodeConstructor): nodes.Node {
+		return new ctor(this.token.offset, this.token.len);
+	}
+
+	public finish<T extends nodes.Node>(node: T, error?: RcasmIssueType, resyncTokens?: TokenType[], resyncStopTokens?: TokenType[]): T {
+		// parseNumeric misuses error for boolean flagging (however the real error mustn't be a false)
+		// + nodelist offsets mustn't be modified, because there is a offset hack in rulesets for smartselection
+		if (!(node instanceof nodes.Nodelist)) {
+			if (error) {
+				this.markError(node, error, resyncTokens, resyncStopTokens);
+			}
+			// set the node end position
+			if (this.prevToken) {
+				// length with more elements belonging together
+				const prevEnd = this.prevToken.offset + this.prevToken.len;
+				node.length = prevEnd > node.offset ? prevEnd - node.offset : 0; // offset is taken from current token, end from previous: Use 0 for empty nodes
+			}
+
+		}
+		return node;
+	}
+
+	public markError<T extends nodes.Node>(node: T, error: RcasmIssueType, resyncTokens?: TokenType[], resyncStopTokens?: TokenType[]): void {
+		if (this.token !== this.lastErrorToken) { // do not report twice on the same token
+			node.addIssue(new nodes.Marker(node, error, nodes.Level.Error, undefined, this.token.offset, this.token.len));
+			this.lastErrorToken = this.token;
+		}
+		if (resyncTokens || resyncStopTokens) {
+			this.resync(resyncTokens, resyncStopTokens);
+		}
+	}
+
+	public parseProgram(textDocument: TextDocument): nodes.Program {
+		const versionId = textDocument.version;
+		const text = textDocument.getText();
+		const textProvider = (offset: number, length: number) => {
+			if (textDocument.version !== versionId) {
+				throw new Error('Underlying model has changed, AST is no longer valid');
+			}
+			return text.substr(offset, length);
+		};
+
+		return this.internalParse(text, this._parseProgram, textProvider);
+	}
+
+	public internalParse<T extends nodes.Node, U extends T | null>(input: string, parseFunc: () => U, textProvider?: nodes.ITextProvider): U;
+	public internalParse<T extends nodes.Node, U extends T>(input: string, parseFunc: () => U, textProvider?: nodes.ITextProvider): U {
+		this.scanner.setSource(input);
+		this.token = this.scanner.scan();
+		const node: U = parseFunc.bind(this)();
+		if (node) {
+			if (textProvider) {
+				node.textProvider = textProvider;
+			} else {
+				node.textProvider = (offset: number, length: number) => { return input.substr(offset, length); };
 			}
 		}
-		return this;
+		return node;
 	}
-}
 
-export interface RCASMDocument {
-	roots: Node[];
-	findNodeBefore(offset: number): Node;
-	findNodeAt(offset: number): Node;
-}
+	public _parseProgram(): nodes.Program {
+		const node = <nodes.Program>this.create(nodes.Program);
 
-export function parse(text: string): RCASMDocument {
-	const scanner = createScanner(text);
-
-	const rcasmDocument = new Node(0, text.length, [], void 0);
-	let curr = rcasmDocument;
-	let endTagStart: number = -1;
-	let endTagName: string | null = null;
-	let pendingAttribute: string | null = null;
-	let token = scanner.scan();
-	while (token !== TokenType.EOS) {
-		switch (token) {
-			case TokenType.StartTagOpen:
-				const child = new Node(scanner.getTokenOffset(), text.length, [], curr);
-				curr.children.push(child);
-				curr = child;
-				break;
-			case TokenType.StartTag:
-				curr.tag = scanner.getTokenText();
-				break;
-			case TokenType.StartTagClose:
-				curr.end = scanner.getTokenEnd(); // might be later set to end tag position
-				curr.startTagEnd = scanner.getTokenEnd();
-				if (curr.tag && isVoidElement(curr.tag) && curr.parent) {
-					curr.closed = true;
-					curr = curr.parent;
-				}
-				break;
-			case TokenType.StartTagSelfClose:
-				if (curr.parent) {
-					curr.closed = true;
-					curr.end = scanner.getTokenEnd();
-					curr.startTagEnd = scanner.getTokenEnd();
-					curr = curr.parent;
-				}
-				break;
-			case TokenType.EndTagOpen:
-				endTagStart = scanner.getTokenOffset();
-				endTagName = null;
-				break;
-			case TokenType.EndTag:
-				endTagName = scanner.getTokenText().toLowerCase();
-				break;
-			case TokenType.EndTagClose:
-				if (endTagName) {
-					let node = curr;
-					// see if we can find a matching tag
-					while (!node.isSameTag(endTagName) && node.parent) {
-						node = node.parent;
-					}
-					if (node.parent) {
-						while (curr !== node) {
-							curr.end = endTagStart;
-							curr.closed = false;
-							curr = curr.parent!;
-						}
-						curr.closed = true;
-						curr.endTagStart = endTagStart;
-						curr.end = scanner.getTokenEnd();
-						curr = curr.parent!;
-					}
-				}
-				break;
-			case TokenType.AttributeName: {
-				pendingAttribute = scanner.getTokenText();
-				let attributes = curr.attributes;
-				if (!attributes) {
-					curr.attributes = attributes = {};
-				}
-				attributes[pendingAttribute] = null; // Support valueless attributes such as 'checked'
-				break;
-			}
-			case TokenType.AttributeValue: {
-				const value = scanner.getTokenText();
-				const attributes = curr.attributes;
-				if (attributes && pendingAttribute) {
-					attributes[pendingAttribute] = value;
-					pendingAttribute = null;
-				}
-				break;
-			}
+		// Empty doc
+		if (this.peek(TokenType.EOF)) {
+			return this.finish(node);
 		}
-		token = scanner.scan();
+
+		// prog: (line? EOL) +
+		do {
+
+			// accept blank lines 
+			if (this.accept(TokenType.EOL)) {
+				continue;
+			}
+
+			// Try for statement
+			if (!node.addChild(this._parseCommentOrInstruction())) {
+
+				// Unknown token (expecting an opcode but a label or comment would have done)
+				this.consumeToken();
+				this.markError(node, ParseError.OpcodeLabelOrCommentExpected);
+
+			}
+
+		} while (!this.peek(TokenType.EOF));
+
+		return this.finish(node);
 	}
-	while (curr.parent) {
-		curr.end = text.length;
-		curr.closed = false;
-		curr = curr.parent;
+
+	public _parseCommentOrInstruction(): nodes.Node | null {
+		// line: comment | instruction;
+		const node = this._parseComment()
+			|| this._parseInstruction();
+
+		// EOL
+		if (node && !this.peek(TokenType.EOF) && !this.accept(TokenType.EOL)) {
+			this.markError(node, ParseError.EolExpected);
+		}
+
+		return node;
 	}
-	return {
-		roots: rcasmDocument.children,
-		findNodeBefore: rcasmDocument.findNodeBefore.bind(rcasmDocument),
-		findNodeAt: rcasmDocument.findNodeAt.bind(rcasmDocument)
-	};
+
+	public _parseInstruction(): nodes.Instruction | null {
+		if (!this.peek(TokenType.Identifier) && !this.peek(TokenType.Label)) {
+			return null;
+		}
+
+		const node = <nodes.Instruction>this.create(nodes.Instruction);
+
+		// Pick up label (optional)
+		node.setLabel(this._parseLabel());
+
+		// Pick up opcode
+		if (!node.setOpcode(this._parseOpcodeAndParams())) {
+			// Consume token to try and recover and complete comment and line
+			this.markError(node, ParseError.OpcodeExpected);
+			this.consumeToken();
+		}
+
+		// Pick up comment (optional)
+		node.setComment(this._parseComment());
+
+		return node;
+	}
+
+	public _parseComment(): nodes.Node | null {
+		if (!this.peek(TokenType.Comment)) {
+			return null;
+		}
+		const node = <nodes.Comment>this.create(nodes.Comment);
+		this.consumeToken();
+
+		return this.finish(node);
+	}
+
+	public _parseOpcodeAndParams(): nodes.Opcode | null {
+		let node = this._parseOpcode();
+		if (!node) {
+			return null;
+		}
+
+		// Obtain parameters
+		switch (node.opcode) {
+			case nodes.OpcodeType.CLR:
+			case nodes.OpcodeType.ADD:
+			case nodes.OpcodeType.INC:
+			case nodes.OpcodeType.AND:
+			case nodes.OpcodeType.ORR:
+			case nodes.OpcodeType.EOR:
+			case nodes.OpcodeType.NOT:
+			case nodes.OpcodeType.SHL:
+				if (!node.setPrimaryParam(this._parseAluRegister())) {
+					return this.finish(node, ParseError.RegisterExpected);
+				}
+				break;
+			case nodes.OpcodeType.LDI:
+				return this._processBinaryOpcode(node,
+					() => this._parseSetRegister(), ParseError.RegisterExpected,
+					() => this._parseInteger(-16, 15), ParseError.IntegerExpected);
+			case nodes.OpcodeType.MOV:
+				return this._processBinaryOpcode(node,
+					() => this._parseMoveRegister(), ParseError.RegisterExpected,
+					() => this._parseMoveRegister(), ParseError.RegisterExpected);
+			case nodes.OpcodeType.JMP:
+			case nodes.OpcodeType.JSR:
+			case nodes.OpcodeType.BNE:
+			case nodes.OpcodeType.BEQ:
+			case nodes.OpcodeType.BLT:
+			case nodes.OpcodeType.BLE:
+			case nodes.OpcodeType.BMI:
+			case nodes.OpcodeType.BCS:
+				return this._processUnaryOpcode(node,
+					() => this._parseLabelRef(), ParseError.LabelRefExpected);
+
+		}
+
+		return node;
+	}
+
+	private _processUnaryOpcode(node: nodes.Opcode,
+		paramFunc: () => nodes.Node | null, paramMissingError: RcasmIssueType): nodes.Opcode {
+
+		// Try and parse param
+		if (!node.setPrimaryParam(paramFunc())) {
+			return this.finish(node, paramMissingError);
+		}
+
+		// All done
+		return this.finish(node);
+	}
+
+	private _processBinaryOpcode(node: nodes.Opcode,
+		firstParamFunc: () => nodes.Node | null, firstParamMissingError: RcasmIssueType,
+		secondParamFunc: () => nodes.Node | null, secondParamMissingError: RcasmIssueType): nodes.Opcode {
+
+		// Try and parse first param
+		if (!node.setPrimaryParam(firstParamFunc())) {
+			// Try and continue to next param
+			this.markError(node, firstParamMissingError);
+			if (this.peekIsBeyondOpcode()) {
+				return node;
+			}
+			this.consumeToken();
+		}
+
+		// Require comma
+		if (!this.accept(TokenType.Comma)) {
+			// Try and continue to next param
+			this.markError(node, ParseError.CommaExpected);
+			if (this.peekIsBeyondOpcode()) {
+				return node;
+			}
+			this.consumeToken();
+		}
+
+		// Try and parse second param
+		if (!node.setSecondaryParam(secondParamFunc())) {
+			return this.finish(node, secondParamMissingError);
+		}
+
+		// All done
+		return this.finish(node);
+	}
+
+	public _parseLabel(): nodes.Label | null {
+		if (!this.peek(TokenType.Label)) {
+			return null;
+		}
+
+		const node = <nodes.Label>this.create(nodes.Label);
+		this.consumeToken();
+		return this.finish(node);
+	}
+
+	public _parseLabelRef(): nodes.Label | null {
+		if (!this.peek(TokenType.Identifier)) {
+			return null;
+		}
+
+		const node = <nodes.Label>this.create(nodes.Label);
+		this.consumeToken();
+		return this.finish(node);
+	}
+
+	public _parseOpcode(): nodes.Opcode | null {
+		if (!this.peek(TokenType.Identifier)) {
+			return null;
+		}
+
+		// Try identifier as opcode
+		let opcodeType = <nodes.OpcodeType>staticOpcodeTable[this.token.text.toLowerCase()];
+		if (typeof opcodeType === 'undefined') {
+			return null;
+		}
+
+		// Consume
+		const node = <nodes.Opcode>this.create(nodes.Opcode);
+		node.opcode = opcodeType;
+		this.consumeToken();
+		return this.finish(node);
+	}
+
+	public _parseAluRegister(): nodes.Register | null {
+		var node = this._parseRegister([
+			nodes.RegisterType.A,
+			nodes.RegisterType.D
+		]);
+
+		// Default to register A if not specified
+		if (!node) {
+			node = <nodes.Register>this.create(nodes.Register);
+			node.register = nodes.RegisterType.A;
+		}
+
+		return node;
+	}
+
+	public _parseSetRegister(): nodes.Register | null {
+		return this._parseRegister([
+			nodes.RegisterType.A,
+			nodes.RegisterType.B
+		]);
+	}
+
+	public _parseMoveRegister(): nodes.Register | null {
+		return this._parseRegister([
+			nodes.RegisterType.A,
+			nodes.RegisterType.B,
+			nodes.RegisterType.C,
+			nodes.RegisterType.D
+		]);
+	}
+
+	public _parseRegister(subset?: nodes.RegisterType[]): nodes.Register | null {
+		if (!this.peek(TokenType.Identifier)) {
+			return null;
+		}
+
+		// Try identifier as register
+		let registerType = <nodes.RegisterType>staticRegisterTable[this.token.text.toLowerCase()];
+		if (typeof registerType === 'undefined') {
+			return null;
+		}
+
+		const node = <nodes.Register>this.create(nodes.Register);
+		node.register = registerType;
+
+		// Verify in range (if required)
+		if (subset && !subset.includes(registerType)) {
+			this.markError(node, ParseError.RegisterOutOfRange);
+		}
+
+		// Consume
+		this.consumeToken();
+		return this.finish(node);
+	}
+
+	public _parseConstant(): nodes.Constant | null {
+		return this._parseHexadecimal()
+			|| this._parseBinary()
+			|| this._parseInteger();
+	}
+
+	public _parseHexadecimal(): nodes.Constant | null {
+		if (!this.peek(TokenType.Hexadecimal)) {
+			return null;
+		}
+
+		const node = <nodes.Constant>this.create(nodes.Constant);
+
+		// try value
+		const intVal = parseInt(this.token.text, 16);
+		if (!intVal) {
+			this.markError(node, ParseError.HexadecimalExpected);
+		}
+		node.value = intVal;
+
+		this.consumeToken();
+		return this.finish(node);
+	}
+
+	public _parseBinary(): nodes.Constant | null {
+		if (!this.peek(TokenType.Binary)) {
+			return null;
+		}
+
+		const node = <nodes.Constant>this.create(nodes.Constant);
+
+		// try value
+		const intVal = parseInt(this.token.text.substring(2), 2);
+		if (!intVal) {
+			this.markError(node, ParseError.BinaryExpected);
+		}
+		node.value = intVal;
+
+		this.consumeToken();
+		return this.finish(node);
+	}
+
+	public _parseInteger(minValue: number = Number.NEGATIVE_INFINITY, maxValue: number = Number.POSITIVE_INFINITY): nodes.Constant | null {
+
+		if (!this.peek(TokenType.Integer) &&
+			!this.peek(TokenType.Plus) &&
+			!this.peek(TokenType.Minus)) {
+			return null;
+		}
+
+		// Accept +/-
+		let isNegative: boolean = this.peek(TokenType.Minus);
+		if (this.peek(TokenType.Plus) || this.peek(TokenType.Minus)) {
+			this.consumeToken();
+		}
+
+		// Must be integer next
+		if (!this.peek(TokenType.Integer)) {
+			return null;
+		}
+
+		// try value
+		let intVal = parseInt(this.token.text);
+		if (!intVal) {
+			return null;
+		}
+		intVal = isNegative ? -intVal : intVal;
+
+		const node = <nodes.Constant>this.create(nodes.Constant);
+		node.value = intVal;
+
+		// test range				
+		if (node.value < minValue || node.value > maxValue) {
+			this.markError(node, ParseError.ConstantOutOfRange);
+		}
+
+		this.consumeToken();
+		return this.finish(node);
+	}
+
 }

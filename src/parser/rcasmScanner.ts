@@ -1,50 +1,43 @@
 /*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Copyright (c) Paul Law. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as nls from 'vscode-nls';
-import { TokenType, ScannerState, Scanner } from '../rcasmLanguageTypes';
-const localize = nls.loadMessageBundle();
+import { TokenType } from '../rcasmLanguageTypes';
 
-class MultiLineStream {
+export interface IToken {
+	type: TokenType;
+	text: string;
+	offset: number;
+	len: number;
+}
+
+export class MultiLineStream {
 
 	private source: string;
 	private len: number;
 	private position: number;
 
-	constructor(source: string, position: number) {
+	constructor(source: string) {
 		this.source = source;
 		this.len = source.length;
-		this.position = position;
+		this.position = 0;
+	}
+
+	public substring(from: number, to: number = this.position): string {
+		return this.source.substring(from, to);
 	}
 
 	public eos(): boolean {
 		return this.len <= this.position;
 	}
 
-	public getSource(): string {
-		return this.source;
-	}
-
 	public pos(): number {
 		return this.position;
 	}
 
-	public goBackTo(pos: number): void {
-		this.position = pos;
-	}
-
-	public goBack(n: number): void {
-		this.position -= n;
-	}
-
 	public advance(n: number): void {
 		this.position += n;
-	}
-
-	public goToEnd(): void {
-		this.position = this.source.length;
 	}
 
 	public nextChar(): number {
@@ -63,73 +56,6 @@ class MultiLineStream {
 		return false;
 	}
 
-	public advanceIfChars(ch: number[]): boolean {
-		let i: number;
-		if (this.position + ch.length > this.source.length) {
-			return false;
-		}
-		for (i = 0; i < ch.length; i++) {
-			if (this.source.charCodeAt(this.position + i) !== ch[i]) {
-				return false;
-			}
-		}
-		this.advance(i);
-		return true;
-	}
-
-	public advanceIfRegExp(regex: RegExp): string {
-		const str = this.source.substr(this.position);
-		const match = str.match(regex);
-		if (match) {
-			this.position = this.position + match.index! + match[0].length;
-			return match[0];
-		}
-		return '';
-	}
-
-	public advanceUntilRegExp(regex: RegExp): string {
-		const str = this.source.substr(this.position);
-		const match = str.match(regex);
-		if (match) {
-			this.position = this.position + match.index!;
-			return match[0];
-		} else {
-			this.goToEnd();
-		}
-		return '';
-	}
-
-	public advanceUntilChar(ch: number): boolean {
-		while (this.position < this.source.length) {
-			if (this.source.charCodeAt(this.position) === ch) {
-				return true;
-			}
-			this.advance(1);
-		}
-		return false;
-	}
-
-	public advanceUntilChars(ch: number[]): boolean {
-		while (this.position + ch.length <= this.source.length) {
-			let i = 0;
-			for (; i < ch.length && this.source.charCodeAt(this.position + i) === ch[i]; i++) {
-			}
-			if (i === ch.length) {
-				return true;
-			}
-			this.advance(1);
-		}
-		this.goToEnd();
-		return false;
-	}
-
-	public skipWhitespace(): boolean {
-		const n = this.advanceWhileChar(ch => {
-			return ch === _WSP || ch === _TAB || ch === _NWL || ch === _LFD || ch === _CAR;
-		});
-		return n > 0;
-	}
-
 	public advanceWhileChar(condition: (ch: number) => boolean): number {
 		const posNow = this.position;
 		while (this.position < this.len && condition(this.source.charCodeAt(this.position))) {
@@ -138,283 +64,224 @@ class MultiLineStream {
 		return this.position - posNow;
 	}
 }
-const _BNG = '!'.charCodeAt(0);
-const _MIN = '-'.charCodeAt(0);
-const _LAN = '<'.charCodeAt(0);
-const _RAN = '>'.charCodeAt(0);
-const _FSL = '/'.charCodeAt(0);
-const _EQS = '='.charCodeAt(0);
-const _DQO = '"'.charCodeAt(0);
-const _SQO = '\''.charCodeAt(0);
+
+const _0 = '0'.charCodeAt(0);
+const _1 = '1'.charCodeAt(0);
+const _9 = '9'.charCodeAt(0);
+const _a = 'a'.charCodeAt(0);
+const _A = 'A'.charCodeAt(0);
+const _b = 'b'.charCodeAt(0);
+const _B = 'B'.charCodeAt(0);
+const _f = 'f'.charCodeAt(0);
+const _F = 'F'.charCodeAt(0);
+const _x = 'x'.charCodeAt(0);
+const _X = 'X'.charCodeAt(0);
+const _z = 'z'.charCodeAt(0);
+const _Z = 'Z'.charCodeAt(0);
 const _NWL = '\n'.charCodeAt(0);
 const _CAR = '\r'.charCodeAt(0);
 const _LFD = '\f'.charCodeAt(0);
 const _WSP = ' '.charCodeAt(0);
 const _TAB = '\t'.charCodeAt(0);
+const _MIN = '-'.charCodeAt(0);
+const _PLS = '+'.charCodeAt(0);
+const _CMA = ','.charCodeAt(0);
+const _COL = ':'.charCodeAt(0);
+const _DOT = '.'.charCodeAt(0);
+const _SEM = ';'.charCodeAt(0);
 
+const staticTokenTable: { [code: number]: TokenType; } = {};
+staticTokenTable[_CMA] = TokenType.Comma;
+staticTokenTable[_MIN] = TokenType.Minus;
+staticTokenTable[_PLS] = TokenType.Plus;
 
-const rcasmScriptContents: { [key: string]: boolean } = {
-	'text/x-handlebars-template': true
-};
+export class Scanner {
 
-export function createScanner(input: string, initialOffset = 0, initialState: ScannerState = ScannerState.WithinContent): Scanner {
+	public stream: MultiLineStream = new MultiLineStream('');
+	public ignoreComment = true;
+	public ignoreWhitespace = true;
 
-	const stream = new MultiLineStream(input, initialOffset);
-	let state = initialState;
-	let tokenOffset: number = 0;
-	let tokenType: TokenType = TokenType.Unknown;
-	let tokenError: string | undefined;
-
-	let hasSpaceAfterTag: boolean;
-	let lastTag: string;
-	let lastAttributeName: string | undefined;
-	let lastTypeValue: string | undefined;
-
-	function nextElementName(): string {
-		return stream.advanceIfRegExp(/^[_:\w][_:\w-.\d]*/).toLowerCase();
+	public setSource(input: string): void {
+		this.stream = new MultiLineStream(input);
 	}
 
-	function nextAttributeName(): string {
-		return stream.advanceIfRegExp(/^[^\s"'>/=\x00-\x0F\x7F\x80-\x9F]*/).toLowerCase();
+	public finishToken(offset: number, type: TokenType, text?: string): IToken {
+		return {
+			offset: offset,
+			len: this.stream.pos() - offset,
+			type: type,
+			text: text || this.stream.substring(offset)
+		};
 	}
 
-	function finishToken(offset: number, type: TokenType, errorMessage?: string): TokenType {
-		tokenType = type;
-		tokenOffset = offset;
-		tokenError = errorMessage;
-		return type;
-	}
+	public scan(): IToken {
 
-	function scan(): TokenType {
-		const offset = stream.pos();
-		const oldState = state;
-		const token = internalScan();
-		if (token !== TokenType.EOS && offset === stream.pos()) {
-			console.log('Scanner.scan has not advanced at offset ' + offset + ', state before: ' + oldState + ' after: ' + state);
-			stream.advance(1);
-			return finishToken(offset, TokenType.Unknown);
-		}
-		return token;
-	}
+		// processes all leading whitespace
+		this._whitespace();
+		const offset = this.stream.pos();
 
-	function internalScan(): TokenType {
-		const offset = stream.pos();
-		if (stream.eos()) {
-			return finishToken(offset, TokenType.EOS);
-		}
-		let errorMessage;
-
-		switch (state) {
-			case ScannerState.WithinComment:
-				if (stream.advanceIfChars([_MIN, _MIN, _RAN])) { // -->
-					state = ScannerState.WithinContent;
-					return finishToken(offset, TokenType.EndCommentTag);
-				}
-				stream.advanceUntilChars([_MIN, _MIN, _RAN]); // -->
-				return finishToken(offset, TokenType.Comment);
-			case ScannerState.WithinDoctype:
-				if (stream.advanceIfChar(_RAN)) {
-					state = ScannerState.WithinContent;
-					return finishToken(offset, TokenType.EndDoctypeTag);
-				}
-				stream.advanceUntilChar(_RAN); // >
-				return finishToken(offset, TokenType.Doctype);
-			case ScannerState.WithinContent:
-				if (stream.advanceIfChar(_LAN)) { // <
-					if (!stream.eos() && stream.peekChar() === _BNG) { // !
-						if (stream.advanceIfChars([_BNG, _MIN, _MIN])) { // <!--
-							state = ScannerState.WithinComment;
-							return finishToken(offset, TokenType.StartCommentTag);
-						}
-						if (stream.advanceIfRegExp(/^!doctype/i)) {
-							state = ScannerState.WithinDoctype;
-							return finishToken(offset, TokenType.StartDoctypeTag);
-						}
-					}
-					if (stream.advanceIfChar(_FSL)) { // /
-						state = ScannerState.AfterOpeningEndTag;
-						return finishToken(offset, TokenType.EndTagOpen);
-					}
-					state = ScannerState.AfterOpeningStartTag;
-					return finishToken(offset, TokenType.StartTagOpen);
-				}
-				stream.advanceUntilChar(_LAN);
-				return finishToken(offset, TokenType.Content);
-			case ScannerState.AfterOpeningEndTag:
-				const tagName = nextElementName();
-				if (tagName.length > 0) {
-					state = ScannerState.WithinEndTag;
-					return finishToken(offset, TokenType.EndTag);
-				}
-				if (stream.skipWhitespace()) { // white space is not valid here
-					return finishToken(offset, TokenType.Whitespace, localize('error.unexpectedWhitespace', 'Tag name must directly follow the open bracket.'));
-				}
-				state = ScannerState.WithinEndTag;
-				stream.advanceUntilChar(_RAN);
-				if (offset < stream.pos()) {
-					return finishToken(offset, TokenType.Unknown, localize('error.endTagNameExpected', 'End tag name expected.'));
-				}
-				return internalScan();
-			case ScannerState.WithinEndTag:
-				if (stream.skipWhitespace()) { // white space is valid here
-					return finishToken(offset, TokenType.Whitespace);
-				}
-				if (stream.advanceIfChar(_RAN)) { // >
-					state = ScannerState.WithinContent;
-					return finishToken(offset, TokenType.EndTagClose);
-				}
-				errorMessage = localize('error.tagNameExpected', 'Closing bracket expected.');
-				break;
-			case ScannerState.AfterOpeningStartTag:
-				lastTag = nextElementName();
-				lastTypeValue = void 0;
-				lastAttributeName = void 0;
-				if (lastTag.length > 0) {
-					hasSpaceAfterTag = false;
-					state = ScannerState.WithinTag;
-					return finishToken(offset, TokenType.StartTag);
-				}
-				if (stream.skipWhitespace()) { // white space is not valid here
-					return finishToken(offset, TokenType.Whitespace, localize('error.unexpectedWhitespace', 'Tag name must directly follow the open bracket.'));
-				}
-				state = ScannerState.WithinTag;
-				stream.advanceUntilChar(_RAN);
-				if (offset < stream.pos()) {
-					return finishToken(offset, TokenType.Unknown, localize('error.startTagNameExpected', 'Start tag name expected.'));
-				}
-				return internalScan();
-			case ScannerState.WithinTag:
-				if (stream.skipWhitespace()) {
-					hasSpaceAfterTag = true; // remember that we have seen a whitespace
-					return finishToken(offset, TokenType.Whitespace);
-				}
-				if (hasSpaceAfterTag) {
-					lastAttributeName = nextAttributeName();
-					if (lastAttributeName.length > 0) {
-						state = ScannerState.AfterAttributeName;
-						hasSpaceAfterTag = false;
-						return finishToken(offset, TokenType.AttributeName);
-					}
-				}
-				if (stream.advanceIfChars([_FSL, _RAN])) { // />
-					state = ScannerState.WithinContent;
-					return finishToken(offset, TokenType.StartTagSelfClose);
-				}
-				if (stream.advanceIfChar(_RAN)) { // >
-					if (lastTag === 'script') {
-						if (lastTypeValue && rcasmScriptContents[lastTypeValue]) {
-							// stay in html
-							state = ScannerState.WithinContent;
-						} else {
-							state = ScannerState.WithinScriptContent;
-						}
-					} else if (lastTag === 'style') {
-						state = ScannerState.WithinStyleContent;
-					} else {
-						state = ScannerState.WithinContent;
-					}
-					return finishToken(offset, TokenType.StartTagClose);
-				}
-				stream.advance(1);
-				return finishToken(offset, TokenType.Unknown, localize('error.unexpectedCharacterInTag', 'Unexpected character in tag.'));
-			case ScannerState.AfterAttributeName:
-				if (stream.skipWhitespace()) {
-					hasSpaceAfterTag = true;
-					return finishToken(offset, TokenType.Whitespace);
-				}
-
-				if (stream.advanceIfChar(_EQS)) {
-					state = ScannerState.BeforeAttributeValue;
-					return finishToken(offset, TokenType.DelimiterAssign);
-				}
-				state = ScannerState.WithinTag;
-				return internalScan(); // no advance yet - jump to WithinTag
-			case ScannerState.BeforeAttributeValue:
-				if (stream.skipWhitespace()) {
-					return finishToken(offset, TokenType.Whitespace);
-				}
-				let attributeValue = stream.advanceIfRegExp(/^[^\s"'`=<>]+/);
-				if (attributeValue.length > 0) {
-					if (stream.peekChar() === _RAN && stream.peekChar(-1) === _FSL) { // <foo bar=http://foo/>
-						stream.goBack(1);
-						attributeValue = attributeValue.substr(0, attributeValue.length - 1);
-					}
-					if (lastAttributeName === 'type') {
-						lastTypeValue = attributeValue;
-					}
-					state = ScannerState.WithinTag;
-					hasSpaceAfterTag = false;
-					return finishToken(offset, TokenType.AttributeValue);
-				}
-				const ch = stream.peekChar();
-				if (ch === _SQO || ch === _DQO) {
-					stream.advance(1); // consume quote
-					if (stream.advanceUntilChar(ch)) {
-						stream.advance(1); // consume quote
-					}
-					if (lastAttributeName === 'type') {
-						lastTypeValue = stream.getSource().substring(offset + 1, stream.pos() - 1);
-					}
-					state = ScannerState.WithinTag;
-					hasSpaceAfterTag = false;
-					return finishToken(offset, TokenType.AttributeValue);
-				}
-				state = ScannerState.WithinTag;
-				hasSpaceAfterTag = false;
-				return internalScan(); // no advance yet - jump to WithinTag
-			case ScannerState.WithinScriptContent:
-				// see http://stackoverflow.com/questions/14574471/how-do-browsers-parse-a-script-tag-exactly
-				let sciptState = 1;
-				while (!stream.eos()) {
-					const match = stream.advanceIfRegExp(/<!--|-->|<\/?script\s*\/?>?/i);
-					if (match.length === 0) {
-						stream.goToEnd();
-						return finishToken(offset, TokenType.Script);
-					} else if (match === '<!--') {
-						if (sciptState === 1) {
-							sciptState = 2;
-						}
-					} else if (match === '-->') {
-						sciptState = 1;
-					} else if (match[1] !== '/') { // <script
-						if (sciptState === 2) {
-							sciptState = 3;
-						}
-					} else { // </script
-						if (sciptState === 3) {
-							sciptState = 2;
-						} else {
-							stream.goBack(match.length); // to the beginning of the closing tag
-							break;
-						}
-					}
-				}
-				state = ScannerState.WithinContent;
-				if (offset < stream.pos()) {
-					return finishToken(offset, TokenType.Script);
-				}
-				return internalScan(); // no advance yet - jump to content
-			case ScannerState.WithinStyleContent:
-				stream.advanceUntilRegExp(/<\/style/i);
-				state = ScannerState.WithinContent;
-				if (offset < stream.pos()) {
-					return finishToken(offset, TokenType.Styles);
-				}
-				return internalScan(); // no advance yet - jump to content
+		// End of file/input
+		if (this.stream.eos()) {
+			return this.finishToken(offset, TokenType.EOF);
 		}
 
-		stream.advance(1);
-		state = ScannerState.WithinContent;
-		return finishToken(offset, TokenType.Unknown, errorMessage);
+		return this.scanNext(offset);
 	}
-	return {
-		scan,
-		getTokenType: () => tokenType,
-		getTokenOffset: () => tokenOffset,
-		getTokenLength: () => stream.pos() - tokenOffset,
-		getTokenEnd: () => stream.pos(),
-		getTokenText: () => stream.getSource().substring(tokenOffset, stream.pos()),
-		getScannerState: () => state,
-		getTokenError: () => tokenError
-	};
+
+	protected scanNext(offset: number): IToken {
+
+		let content: string[] = [];
+
+		// EOL
+		if (this._newline()) {
+			return this.finishToken(offset, TokenType.EOL);
+		}
+
+		// Comment
+		if (this._comment()) {
+			return this.finishToken(offset, TokenType.Comment);
+		}
+
+		// single character tokens
+		const tokenType = <TokenType>staticTokenTable[this.stream.peekChar()];
+		if (typeof tokenType !== 'undefined') {
+			this.stream.advance(1);
+			return this.finishToken(offset, tokenType);
+		}
+
+		// Identifier [a-zA-Z] [a-zA-Z0-9.]* (or label with :)
+		if (this._identifier()) {
+			if (this.stream.peekChar() === _COL){
+				this.stream.advance(1);
+				return this.finishToken(offset, TokenType.Label);	
+			}
+			return this.finishToken(offset, TokenType.Identifier);
+		}
+
+		// Binary '0b' [0-1]+
+		if (this._binary()) {
+			return this.finishToken(offset, TokenType.Binary);
+		}
+
+		// Hexadecimal '0x' [0-9a-fA-F]+
+		if (this._hexadecimal()) {
+			return this.finishToken(offset, TokenType.Hexadecimal);
+		}
+
+		// Integer [0-9]+
+		if (this._number()) {
+			return this.finishToken(offset, TokenType.Integer);
+		}
+
+		// Unknown char
+		this.stream.nextChar();
+		return this.finishToken(offset, TokenType.InvalidChar);
+	}
+
+	private _comment(): boolean {
+		// COMMENT: ';' ~ [\r\n]* -> skip;
+		if (this.stream.advanceIfChar(_SEM)) {
+			this.stream.advanceWhileChar((ch) => ch !== _CAR && ch !== _LFD && ch !== _NWL);
+			return true;
+		}
+
+		return false;
+	}
+
+	private _identifier(): boolean {
+		if (this._identFirstChar()) {
+			while (this._identChar()) { }
+			return true;
+		}
+
+		return false;
+	}
+
+	private _identFirstChar(): boolean {
+		const ch = this.stream.peekChar();
+		if (ch >= _a && ch <= _z || // a-z
+			ch >= _A && ch <= _Z) { // A-Z
+			this.stream.advance(1);
+			return true;
+		}
+		return false;
+	}
+
+	private _identChar(): boolean {
+		const ch = this.stream.peekChar();
+		if (ch === _DOT || // .
+			ch >= _a && ch <= _z || // a-z
+			ch >= _A && ch <= _Z || // A-Z
+			ch >= _0 && ch <= _9) { // 0/9
+			this.stream.advance(1);
+			return true;
+		}
+		return false;
+	}
+
+	private _binary(): boolean {
+		const ch1 = this.stream.peekChar(0);
+		const ch2 = this.stream.peekChar(1);
+		if (ch1 === _0 && (ch2 === _B || ch2 === _b)) {
+			this.stream.advance(2);
+			this.stream.advanceWhileChar((ch) => {
+				return ch === _0 || ch === _1;
+			});
+			return true;
+		}
+
+		return false;
+	}
+
+	private _hexadecimal(): boolean {
+		const ch1 = this.stream.peekChar(0);
+		const ch2 = this.stream.peekChar(1);
+		if (ch1 === _0 && (ch2 === _X || ch2 === _x)) {
+			this.stream.advance(2);
+			let ch = this.stream.peekChar();
+			while (ch >= _0 && ch <= _9 || ch >= _a && ch <= _f || ch >= _A && ch <= _F) {
+				this.stream.advance(1);
+				ch = this.stream.peekChar();
+			}
+			return true;
+		}
+
+		return false;
+	}
+
+	private _number(): boolean {
+		let ch: number;
+		ch = this.stream.peekChar();
+		if (ch >= _0 && ch <= _9) {
+			this.stream.advance(1);
+			this.stream.advanceWhileChar((ch) => {
+				return ch >= _0 && ch <= _9;
+			});
+			return true;
+		}
+		return false;
+	}
+
+	private _newline(): boolean {
+		const ch = this.stream.peekChar();
+		switch (ch) {
+			case _CAR:
+			case _LFD:
+			case _NWL:
+				this.stream.advance(1);
+				if (ch === _CAR) {
+					this.stream.advanceIfChar(_NWL);
+				}
+				return true;
+		}
+
+		return false;
+	}
+
+	private _whitespace(): boolean {
+		const n = this.stream.advanceWhileChar((ch) => {
+			return ch === _WSP || ch === _TAB;
+		});
+		return n > 0;
+	}
 }

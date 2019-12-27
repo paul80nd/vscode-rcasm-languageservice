@@ -3,8 +3,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Position, Range, MarkupContent, MarkupKind } from 'vscode-languageserver-types';
-import { TextDocument } from 'vscode-languageserver-textdocument';
+//import { Position, Range, MarkupContent, MarkupKind } from 'vscode-languageserver-types';
+//import { TextDocument } from 'vscode-languageserver-textdocument';
+//import { IToken } from './parser/rcasmScanner';
 
 // export interface RCASMFormatConfiguration {
 // 	tabSize?: number;
@@ -40,61 +41,23 @@ export interface Node {
 }
 
 export enum TokenType {
-	StartCommentTag,
+	Binary,
+	Comma,
 	Comment,
-	EndCommentTag,
-	StartTagOpen,
-	StartTagClose,
-	StartTagSelfClose,
-	StartTag,
-	EndTagOpen,
-	EndTagClose,
-	EndTag,
-	DelimiterAssign,
-	AttributeName,
-	AttributeValue,
-	StartDoctypeTag,
-	Doctype,
-	EndDoctypeTag,
-	Content,
-	Whitespace,
-	Unknown,
-	Script,
-	Styles,
-	EOS
+	Hexadecimal,
+	Identifier,
+	Integer,
+	Label,
+	Minus,
+	Plus,
+	EOL,
+	EOF,
+	InvalidChar
 }
 
-export enum ScannerState {
-	WithinContent,
-	AfterOpeningStartTag,
-	AfterOpeningEndTag,
-	WithinDoctype,
-	WithinTag,
-	WithinEndTag,
-	WithinComment,
-	WithinScriptContent,
-	WithinStyleContent,
-	AfterAttributeName,
-	BeforeAttributeValue
-}
+export type Program = {
 
-export interface Scanner {
-	scan(): TokenType;
-	getTokenType(): TokenType;
-	getTokenOffset(): number;
-	getTokenLength(): number;
-	getTokenEnd(): number;
-	getTokenText(): string;
-	getTokenError(): string | undefined;
-	getScannerState(): ScannerState;
-}
-
-export declare type RCASMDocument = {
-	roots: Node[];
-	findNodeBefore(offset: number): Node;
-	findNodeAt(offset: number): Node;
 };
-
 // export interface DocumentContext {
 // 	resolveReference(ref: string, base?: string): string | undefined;
 // }

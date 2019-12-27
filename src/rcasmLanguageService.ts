@@ -4,7 +4,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 //import { createScanner } from './parser/rcasmScanner';
-import { parse } from './parser/rcasmParser';
+import { Parser } from './parser/rcasmParser';
 // import { RCASMCompletion } from './services/rcasmCompletion';
 // import { RCASMHover } from './services/rcasmHover';
 // import { format } from './services/rcasmFormatter';
@@ -15,7 +15,7 @@ import { parse } from './parser/rcasmParser';
 // import { findMatchingTagPosition } from './services/rcasmMatchingTagPosition';
 // import { Position, CompletionList, Hover, Range, SymbolInformation, TextEdit, DocumentHighlight, DocumentLink, FoldingRange, SelectionRange, WorkspaceEdit } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { /* Scanner, */ RCASMDocument as Program, /*  CompletionConfiguration, ICompletionParticipant, RCASMFormatConfiguration, DocumentContext, IRCASMDataProvider, RCASMDataV1, */ LanguageServiceOptions } from './rcasmLanguageTypes';
+import { /* Scanner, */ Program, /* CompletionConfiguration, ICompletionParticipant, RCASMFormatConfiguration, DocumentContext, IRCASMDataProvider, RCASMDataV1, */ LanguageServiceOptions } from './rcasmLanguageTypes';
 // import { getFoldingRanges } from './services/rcasmFolding';
 // import { getSelectionRanges } from './services/rcasmSelectionRange';
 // import { handleCustomDataProviders } from './languageFacts/builtinDataProviders';
@@ -43,6 +43,7 @@ export interface LanguageService {
 }
 
 export function getLanguageService(options?: LanguageServiceOptions): LanguageService {
+	const rcasmParser = new Parser();
 	//	const rcasmHover = new RCASMHover(options && options.clientCapabilities);
 	//	const rcasmCompletion = new RCASMCompletion(options && options.clientCapabilities);
 
@@ -52,7 +53,7 @@ export function getLanguageService(options?: LanguageServiceOptions): LanguageSe
 
 	return {
 		//		createScanner,
-		parseProgram: document => parse(document.getText()),
+		parseProgram: rcasmParser.parseProgram.bind(rcasmParser),
 		//		doComplete: rcasmCompletion.doComplete.bind(rcasmCompletion),
 		//		setCompletionParticipants: rcasmCompletion.setCompletionParticipants.bind(rcasmCompletion),
 		//		doHover: rcasmHover.doHover.bind(rcasmHover),
