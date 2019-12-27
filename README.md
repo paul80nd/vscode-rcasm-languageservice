@@ -3,7 +3,6 @@
 Relay Computer Assembly language service designed for use in either VSCode or the Monaco editor
 (based on [microsoft/vscode-html-languageservice](https://github.com/microsoft/vscode-html-languageservice)).
 
-[![npm Package](https://img.shields.io/npm/v/vscode-html-languageservice.svg?style=flat-square)](https://www.npmjs.org/package/vscode-html-languageservice)
 [![Build Status](https://github.com/paul80nd/vscode-rcasm-languageservice/workflows/Node%20CI/badge.svg)](https://github.com/paul80nd/vscode-rcasm-languageservice/actions)
 
 Why?
