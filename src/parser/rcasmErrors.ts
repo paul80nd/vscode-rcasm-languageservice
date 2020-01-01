@@ -18,6 +18,7 @@ export class RcasmIssueType implements nodes.IRule {
 export const ParseError = {
 	BinaryExpected: new RcasmIssueType('rcasm-binaryexpected', localize('expected.binary', "binary expected")),
 	ConstantExpected: new RcasmIssueType('rcasm-constantexpected', localize('expected.constant', "constant expected")),
+	ConstantOrLabelExpected: new RcasmIssueType('rcasm-constantorlabelexpected', localize('expected.constantorlabel', "constant or label expected")),
 	CommaExpected: new RcasmIssueType('rcasm-commaexpected', localize('expected.comma', "comma expected")),
 	EolExpected: new RcasmIssueType('rcasm-eolexpected', localize('expected.eol', "end of line expected")),	
 	HexadecimalExpected: new RcasmIssueType('rcasm-hexadecimalexpected', localize('expected.hexadecimal', "hexadecimal expected")),

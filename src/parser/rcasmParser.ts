@@ -258,9 +258,7 @@ export class Parser {
 				}
 				break;
 			case nodes.OpcodeType.LDI:
-				return this._processBinaryOpcode(node,
-					() => this._parseSetRegister(), ParseError.RegisterExpected,
-					() => this._parseInteger(-16, 15), ParseError.IntegerExpected);
+				return this._processLoadImmediate(node);
 			case nodes.OpcodeType.MOV:
 				return this._processBinaryOpcode(node,
 					() => this._parseMoveRegister(), ParseError.RegisterExpected,
@@ -329,6 +327,45 @@ export class Parser {
 		return this.finish(node);
 	}
 
+	public _processLoadImmediate(node: nodes.Opcode): nodes.Opcode {
+
+		// Try and parse first param
+		let registerNode = this._parseSetRegister();
+		if (!node.setPrimaryParam(registerNode)) {
+			// Try and continue to next param
+			this.markError(node, ParseError.RegisterExpected);
+			if (this.peekIsBeyondOpcode()) {
+				return node;
+			}
+			this.consumeToken();
+		}
+
+		// Which vesion of LDI
+		let is16bitLoad = registerNode?.register === nodes.RegisterType.J
+			|| registerNode?.register === nodes.RegisterType.M;
+
+		// Require comma
+		if (!this.accept(TokenType.Comma)) {
+			// Try and continue to next param
+			this.markError(node, ParseError.CommaExpected);
+			if (this.peekIsBeyondOpcode()) {
+				return node;
+			}
+			this.consumeToken();
+		}
+
+		// Try and parse second param
+		let constNode = is16bitLoad
+			? this._parseHexadecimal(0, 0xFFFF) || this._parseLabelRef()
+			: this._parseInteger(-16, 15);
+		if (!node.setSecondaryParam(constNode)) {
+			return this.finish(node, is16bitLoad ? ParseError.ConstantOrLabelExpected : ParseError.IntegerExpected);
+		}
+
+		// All done
+		return this.finish(node);
+	}
+
 	public _parseLabel(): nodes.Label | null {
 		if (!this.peek(TokenType.Label)) {
 			return null;
@@ -390,7 +427,9 @@ export class Parser {
 	public _parseSetRegister(): nodes.Register | null {
 		return this._parseRegister([
 			nodes.RegisterType.A,
-			nodes.RegisterType.B
+			nodes.RegisterType.B,
+			nodes.RegisterType.M,
+			nodes.RegisterType.J
 		]);
 	}
 

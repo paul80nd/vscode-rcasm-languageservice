@@ -53,7 +53,7 @@ export function assertOpcodeNodeWithParam(text: string, parser: Parser, f: (...a
 
 export function assertOpcodeNodeWithParams(text: string, parser: Parser, f: (...args: any[]) => nodes.Node | null, opcode: nodes.OpcodeType,
 	param1: nodes.RegisterType,
-	param2: number | null = null): void {
+	param2: number | string | null = null): void {
 	let node = assertOpcodeNode(text, parser, f, opcode);
 
 	let regParam = node.primaryParam as nodes.Register;
@@ -63,6 +63,10 @@ export function assertOpcodeNodeWithParams(text: string, parser: Parser, f: (...
 	if (param2 && node.secondaryParam?.type === nodes.NodeType.Constant) {
 		let constParam = node.secondaryParam as nodes.Constant;
 		assert.equal(constParam.value, param2);
+	}
+	if (param2 && node.secondaryParam?.type === nodes.NodeType.Label) {
+		let labelParam = node.secondaryParam as nodes.Label;
+		assert.equal(labelParam.getText(), param2);
 	}
 	if (param2 && node.secondaryParam?.type === nodes.NodeType.Register) {
 		let reg2Param = node.secondaryParam as nodes.Register;
@@ -176,6 +180,8 @@ suite('rcasm - Parser', () => {
 		let parser = new Parser();
 		assertRegisterNode('a', parser, parser._parseSetRegister.bind(parser), nodes.RegisterType.A);
 		assertRegisterNode('B', parser, parser._parseSetRegister.bind(parser), nodes.RegisterType.B);
+		assertRegisterNode('J', parser, parser._parseSetRegister.bind(parser), nodes.RegisterType.J);
+		assertRegisterNode('m', parser, parser._parseSetRegister.bind(parser), nodes.RegisterType.M);
 		assertError('d', parser, parser._parseSetRegister.bind(parser), ParseError.RegisterOutOfRange);
 	});
 
@@ -192,7 +198,7 @@ suite('rcasm - Parser', () => {
 		assertOpcodeNodeWithParams('rol a', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.ROL, nodes.RegisterType.A);
 	});
 
-	test('Ldi Opcode', function () {
+	test('8-bit Ldi Opcode', function () {
 		let parser = new Parser();
 		assertOpcodeNodeWithParams('ldi a,1', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.LDI, nodes.RegisterType.A, 1);
 		assertOpcodeNodeWithParams('ldi b,-14', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.LDI, nodes.RegisterType.B, -14);
@@ -203,6 +209,18 @@ suite('rcasm - Parser', () => {
 		assertError('ldi b,', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.IntegerExpected);
 		assertError('ldi b, -17', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.ConstantOutOfRange);
 		assertError('ldi b, 16', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.ConstantOutOfRange);
+	});
+
+	test('16-bit Ldi Opcode', function () {
+		let parser = new Parser();
+		assertOpcodeNodeWithParams('ldi m,0xFEDC', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.LDI, nodes.RegisterType.M, 0xFEDC);
+		assertOpcodeNodeWithParams('ldi j,0xBCD', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.LDI, nodes.RegisterType.J, 0xBCD);
+		assertOpcodeNodeWithParams('ldi m,label', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.LDI, nodes.RegisterType.M, "label");
+		assertError('ldi ,1', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.RegisterExpected);
+		assertError('ldi xy,1', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.RegisterOutOfRange);
+		assertError('ldi m 0x0034', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.CommaExpected);
+		assertError('ldi m,', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.ConstantOrLabelExpected);
+		assertError('ldi j, 0x1FFFF', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.ConstantOutOfRange);
 	});
 
 	test('Mov Opcode', function () {
