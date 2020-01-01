@@ -184,6 +184,7 @@ suite('rcasm - Parser', () => {
 		let parser = new Parser();
 		assertOpcodeNodeWithParams('clr', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.CLR, nodes.RegisterType.A);
 		assertOpcodeNodeWithParams('add d', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.ADD, nodes.RegisterType.D);
+		assertOpcodeNodeWithParams('rol a', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.ROL, nodes.RegisterType.A);
 	});
 
 	test('Ldi Opcode', function () {

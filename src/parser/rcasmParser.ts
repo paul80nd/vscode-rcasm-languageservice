@@ -7,14 +7,15 @@ import { TokenType } from '../rcasmLanguageTypes';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 const staticOpcodeTable: { [code: string]: nodes.OpcodeType; } = {};
-staticOpcodeTable['clr'] = nodes.OpcodeType.CLR;
 staticOpcodeTable['add'] = nodes.OpcodeType.ADD;
 staticOpcodeTable['inc'] = nodes.OpcodeType.INC;
 staticOpcodeTable['and'] = nodes.OpcodeType.AND;
 staticOpcodeTable['orr'] = nodes.OpcodeType.ORR;
 staticOpcodeTable['eor'] = nodes.OpcodeType.EOR;
 staticOpcodeTable['not'] = nodes.OpcodeType.NOT;
-staticOpcodeTable['shl'] = nodes.OpcodeType.SHL;
+staticOpcodeTable['rol'] = nodes.OpcodeType.ROL;
+staticOpcodeTable['cmp'] = nodes.OpcodeType.CMP;
+staticOpcodeTable['clr'] = nodes.OpcodeType.CLR;
 staticOpcodeTable['mov'] = nodes.OpcodeType.MOV;
 staticOpcodeTable['ldi'] = nodes.OpcodeType.LDI;
 staticOpcodeTable['jmp'] = nodes.OpcodeType.JMP;
@@ -249,7 +250,8 @@ export class Parser {
 			case nodes.OpcodeType.ORR:
 			case nodes.OpcodeType.EOR:
 			case nodes.OpcodeType.NOT:
-			case nodes.OpcodeType.SHL:
+			case nodes.OpcodeType.ROL:
+			case nodes.OpcodeType.CMP:
 				if (!node.setPrimaryParam(this._parseAluRegister())) {
 					return this.finish(node, ParseError.RegisterExpected);
 				}
