@@ -46,6 +46,7 @@ suite('rcasm - Scanner', () => {
 
 	test('Integer', function () {
 		let scanner = new Scanner();
+		assertSingleToken(scanner, '0', 1, 0, '0', TokenType.Integer);
 		assertSingleToken(scanner, '123', 3, 0, '123', TokenType.Integer);
 		assertSingleToken(scanner, '456789', 6, 0, '456789', TokenType.Integer);
 		assertSingleToken(scanner, '0246', 4, 0, '0246', TokenType.Integer);

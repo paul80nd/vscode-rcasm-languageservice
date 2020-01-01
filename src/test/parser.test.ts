@@ -196,6 +196,7 @@ suite('rcasm - Parser', () => {
 		let parser = new Parser();
 		assertOpcodeNodeWithParams('ldi a,1', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.LDI, nodes.RegisterType.A, 1);
 		assertOpcodeNodeWithParams('ldi b,-14', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.LDI, nodes.RegisterType.B, -14);
+		assertOpcodeNodeWithParams('ldi a,0', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.LDI, nodes.RegisterType.A, 0);
 		assertError('ldi ,1', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.RegisterExpected);
 		assertError('ldi c,1', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.RegisterOutOfRange);
 		assertError('ldi b 1', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.CommaExpected);

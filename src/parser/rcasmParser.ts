@@ -500,7 +500,7 @@ export class Parser {
 
 		// try value
 		let intVal = parseInt(this.token.text);
-		if (!intVal) {
+		if (isNaN(intVal)) {
 			return null;
 		}
 		intVal = isNegative ? -intVal : intVal;
