@@ -38,12 +38,17 @@ export function assertOpcodeNode(text: string, parser: Parser, f: (...args: any[
 }
 
 export function assertOpcodeNodeWithParam(text: string, parser: Parser, f: (...args: any[]) => nodes.Node | null, opcode: nodes.OpcodeType,
-	param: string): void {
+	param: string | number): void {
 	let node = assertOpcodeNode(text, parser, f, opcode);
 
-	let paramLabel = node.primaryParam as nodes.Label;
-	assert.ok(paramLabel !== null, 'primary param is not a label');
-	assert.equal(paramLabel.getText(), param);
+	if (param && node.secondaryParam?.type === nodes.NodeType.Constant) {
+		let constParam = node.secondaryParam as nodes.Constant;
+		assert.equal(constParam.value, param);
+	} else {
+		let paramLabel = node.primaryParam as nodes.Label;
+		assert.ok(paramLabel !== null, 'primary param is not a label');
+		assert.equal(paramLabel.getText(), param);
+	}
 }
 
 export function assertOpcodeNodeWithParams(text: string, parser: Parser, f: (...args: any[]) => nodes.Node | null, opcode: nodes.OpcodeType,
@@ -229,6 +234,15 @@ suite('rcasm - Parser', () => {
 		assertOpcodeNodeWithParam('bne test2', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.BNE, "test2");
 		assertOpcodeNodeWithParam('blt test.tset', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.BLT, "test.tset");
 		assertError('ble', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.LabelRefExpected);
+	});
+
+	test('Opcode Opcode', function () {
+		let parser = new Parser();
+		assertOpcodeNode('opc', parser, parser._parseOpcode.bind(parser), nodes.OpcodeType.OPC);
+		assertOpcodeNodeWithParam('opc 0xFE', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.OPC, 0xFE);
+		assertOpcodeNodeWithParam('opc 0b01010011', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.OPC, 0b01010011);
+		assertError('opc', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.OpcodeLiteralExpected);
+		assertError('opc 0x1FF', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.ConstantOutOfRange);
 	});
 
 	test('Instruction', function () {

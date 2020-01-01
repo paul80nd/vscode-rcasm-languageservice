@@ -30,7 +30,7 @@ export enum RegisterType {
 export enum OpcodeType {
 	NOP,
 	ADD, INC, AND, ORR, EOR, NOT, ROL, CMP,
-	LDI, MOV, CLR,
+	MOV, CLR, LDI, OPC,
 	JMP, JSR, RTS,
 	BNE, BEQ, BLT, BLE, BMI, BCS
 }

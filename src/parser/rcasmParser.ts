@@ -15,9 +15,10 @@ staticOpcodeTable['eor'] = nodes.OpcodeType.EOR;
 staticOpcodeTable['not'] = nodes.OpcodeType.NOT;
 staticOpcodeTable['rol'] = nodes.OpcodeType.ROL;
 staticOpcodeTable['cmp'] = nodes.OpcodeType.CMP;
-staticOpcodeTable['clr'] = nodes.OpcodeType.CLR;
 staticOpcodeTable['mov'] = nodes.OpcodeType.MOV;
+staticOpcodeTable['clr'] = nodes.OpcodeType.CLR;
 staticOpcodeTable['ldi'] = nodes.OpcodeType.LDI;
+staticOpcodeTable['opc'] = nodes.OpcodeType.OPC;
 staticOpcodeTable['jmp'] = nodes.OpcodeType.JMP;
 staticOpcodeTable['jsr'] = nodes.OpcodeType.JSR;
 staticOpcodeTable['rts'] = nodes.OpcodeType.RTS;
@@ -264,6 +265,9 @@ export class Parser {
 				return this._processBinaryOpcode(node,
 					() => this._parseMoveRegister(), ParseError.RegisterExpected,
 					() => this._parseMoveRegister(), ParseError.RegisterExpected);
+			case nodes.OpcodeType.OPC:
+				return this._processUnaryOpcode(node,
+					() => this._parseOpcodeLiteral(), ParseError.OpcodeLiteralExpected);
 			case nodes.OpcodeType.JMP:
 			case nodes.OpcodeType.JSR:
 			case nodes.OpcodeType.BNE:
@@ -345,6 +349,11 @@ export class Parser {
 		return this.finish(node);
 	}
 
+	public _parseOpcodeLiteral(): nodes.Constant | null {
+		return this._parseHexadecimal(0, 0xFF)
+			|| this._parseBinary(0, 0xFF);
+	}
+
 	public _parseOpcode(): nodes.Opcode | null {
 		if (!this.peek(TokenType.Identifier)) {
 			return null;
@@ -424,7 +433,7 @@ export class Parser {
 			|| this._parseInteger();
 	}
 
-	public _parseHexadecimal(): nodes.Constant | null {
+	public _parseHexadecimal(minValue: number = 0, maxValue: number = Number.POSITIVE_INFINITY): nodes.Constant | null {
 		if (!this.peek(TokenType.Hexadecimal)) {
 			return null;
 		}
@@ -438,11 +447,16 @@ export class Parser {
 		}
 		node.value = intVal;
 
+		// test range				
+		if (node.value < minValue || node.value > maxValue) {
+			this.markError(node, ParseError.ConstantOutOfRange);
+		}
+
 		this.consumeToken();
 		return this.finish(node);
 	}
 
-	public _parseBinary(): nodes.Constant | null {
+	public _parseBinary(minValue: number = 0, maxValue: number = Number.POSITIVE_INFINITY): nodes.Constant | null {
 		if (!this.peek(TokenType.Binary)) {
 			return null;
 		}
@@ -455,6 +469,11 @@ export class Parser {
 			this.markError(node, ParseError.BinaryExpected);
 		}
 		node.value = intVal;
+
+		// test range				
+		if (node.value < minValue || node.value > maxValue) {
+			this.markError(node, ParseError.ConstantOutOfRange);
+		}
 
 		this.consumeToken();
 		return this.finish(node);

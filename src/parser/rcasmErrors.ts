@@ -25,6 +25,7 @@ export const ParseError = {
 	LabelRefExpected: new RcasmIssueType('rcasm-labelrefexpected', localize('expected.labelref', "label reference expected")),
 	RegisterExpected: new RcasmIssueType('rcasm-registerexpected', localize('expected.register', "register expected")),
 	OpcodeExpected: new RcasmIssueType('rcasm-opcodeexpected', localize('expected.opcode', "opcode expected")),
+	OpcodeLiteralExpected: new RcasmIssueType('rcasm-opcodeliteralexpected', localize('expected.opcodeliteral', "opcode literal expected")),
 	OpcodeLabelOrCommentExpected: new RcasmIssueType('rcasm-opcodelabelorcommentexpected', localize('expected.opcodelabelorcomment', "opcode, label or comment expected")),
 	ConstantOutOfRange: new RcasmIssueType('rcasm-constantoutofrange', localize('outofrange.constant', "constant out of range")),	
 	RegisterOutOfRange: new RcasmIssueType('rcasm-registeroutofrange', localize('outofrange.register', "register out of range")),	
