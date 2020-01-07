@@ -481,7 +481,7 @@ export class Parser {
 
 		// try value
 		const intVal = parseInt(this.token.text, 16);
-		if (!intVal) {
+		if (isNaN(intVal)) {
 			this.markError(node, ParseError.HexadecimalExpected);
 		}
 		node.value = intVal;
@@ -504,7 +504,7 @@ export class Parser {
 
 		// try value
 		const intVal = parseInt(this.token.text.substring(2), 2);
-		if (!intVal) {
+		if (isNaN(intVal)) {
 			this.markError(node, ParseError.BinaryExpected);
 		}
 		node.value = intVal;

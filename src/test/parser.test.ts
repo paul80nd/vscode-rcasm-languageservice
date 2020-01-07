@@ -116,12 +116,14 @@ suite('rcasm - Parser', () => {
 
 	test('Hexadecimal', function () {
 		let parser = new Parser();
+		assertConstantNode('0x00', parser, parser._parseHexadecimal.bind(parser), 0);
 		assertConstantNode('0x0f', parser, parser._parseHexadecimal.bind(parser), 15);
 		assertConstantNode('0XFFFF', parser, parser._parseHexadecimal.bind(parser), 65535);
 	});
 
 	test('Binary', function () {
 		let parser = new Parser();
+		assertConstantNode('0b0000', parser, parser._parseBinary.bind(parser), 0);
 		assertConstantNode('0b0101', parser, parser._parseBinary.bind(parser), 5);
 		assertConstantNode('0B1010', parser, parser._parseBinary.bind(parser), 10);
 		assertConstantNode('0b1111', parser, parser._parseBinary.bind(parser), 15);
@@ -129,6 +131,7 @@ suite('rcasm - Parser', () => {
 
 	test('Integer', function () {
 		let parser = new Parser();
+		assertConstantNode('0', parser, parser._parseInteger.bind(parser), 0);
 		assertConstantNode('456', parser, parser._parseInteger.bind(parser), 456);
 		assertConstantNode('+123', parser, parser._parseInteger.bind(parser), 123);
 		assertConstantNode('-345', parser, parser._parseInteger.bind(parser), -345);
@@ -216,6 +219,7 @@ suite('rcasm - Parser', () => {
 		assertOpcodeNodeWithParams('ldi m,0xFEDC', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.LDI, nodes.RegisterType.M, 0xFEDC);
 		assertOpcodeNodeWithParams('ldi j,0xBCD', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.LDI, nodes.RegisterType.J, 0xBCD);
 		assertOpcodeNodeWithParams('ldi m,label', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.LDI, nodes.RegisterType.M, "label");
+		assertOpcodeNodeWithParams('ldi m,0x0', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.LDI, nodes.RegisterType.M, 0x0);
 		assertError('ldi ,1', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.RegisterExpected);
 		assertError('ldi xy,1', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.RegisterOutOfRange);
 		assertError('ldi m 0x0034', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.CommaExpected);
@@ -260,6 +264,8 @@ suite('rcasm - Parser', () => {
 		assertOpcodeNode('opc', parser, parser._parseOpcode.bind(parser), nodes.OpcodeType.OPC);
 		assertOpcodeNodeWithParam('opc 0xFE', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.OPC, 0xFE);
 		assertOpcodeNodeWithParam('opc 0b01010011', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.OPC, 0b01010011);
+		assertOpcodeNodeWithParam('opc 0b00000000', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.OPC, 0b0);
+		assertOpcodeNodeWithParam('opc 0x00', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.OPC, 0x0);
 		assertError('opc', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.OpcodeLiteralExpected);
 		assertError('opc 0x1FF', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.ConstantOutOfRange);
 	});
