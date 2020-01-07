@@ -6,7 +6,7 @@
 //import { createScanner } from './parser/rcasmScanner';
 import { Parser } from './parser/rcasmParser';
 import { RCASMValidation } from './services/rcasmValidation';
-// import { RCASMCompletion } from './services/rcasmCompletion';
+import { RCASMCompletion } from './services/rcasmCompletion';
 // import { RCASMHover } from './services/rcasmHover';
 // import { format } from './services/rcasmFormatter';
 // import { findDocumentLinks } from './services/rcasmLinks';
@@ -14,9 +14,9 @@ import { RCASMValidation } from './services/rcasmValidation';
 // import { findDocumentSymbols } from './services/rcasmSymbolsProvider';
 // import { doRename } from './services/rcasmRename';
 // import { findMatchingTagPosition } from './services/rcasmMatchingTagPosition';
-import { Diagnostic /* Position, CompletionList, Hover, Range, SymbolInformation, TextEdit, DocumentHighlight, DocumentLink, FoldingRange, SelectionRange, WorkspaceEdit */ } from 'vscode-languageserver-types';
+import { Diagnostic, Position, CompletionList, /*Hover, Range, SymbolInformation, TextEdit, DocumentHighlight, DocumentLink, FoldingRange, SelectionRange, WorkspaceEdit */ } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { /* Scanner, */ Program, /* CompletionConfiguration, ICompletionParticipant, RCASMFormatConfiguration, DocumentContext, IRCASMDataProvider, RCASMDataV1, */ LanguageSettings, LanguageServiceOptions } from './rcasmLanguageTypes';
+import { /* Scanner, */ Program, CompletionConfiguration, /* ICompletionParticipant, RCASMFormatConfiguration, DocumentContext, IRCASMDataProvider, RCASMDataV1, */ LanguageSettings, LanguageServiceOptions } from './rcasmLanguageTypes';
 // import { getFoldingRanges } from './services/rcasmFolding';
 // import { getSelectionRanges } from './services/rcasmSelectionRange';
 // import { handleCustomDataProviders } from './languageFacts/builtinDataProviders';
@@ -31,7 +31,7 @@ export interface LanguageService {
 	doValidation(document: TextDocument, program: Program, documentSettings?: LanguageSettings): Diagnostic[];
 	parseProgram(document: TextDocument): Program;
 	//	findDocumentHighlights(document: TextDocument, position: Position, rcasmDocument: RCASMDocument): DocumentHighlight[];
-	//	doComplete(document: TextDocument, position: Position, rcasmDocument: RCASMDocument, options?: CompletionConfiguration): CompletionList;
+	doComplete(document: TextDocument, position: Position, program: Program, options?: CompletionConfiguration): CompletionList;
 	//	setCompletionParticipants(registeredCompletionParticipants: ICompletionParticipant[]): void;
 	//	doHover(document: TextDocument, position: Position, rcasmDocument: RCASMDocument): Hover | null;
 	//	format(document: TextDocument, range: Range | undefined, options: RCASMFormatConfiguration): TextEdit[];
@@ -47,8 +47,8 @@ export interface LanguageService {
 export function getLanguageService(options?: LanguageServiceOptions): LanguageService {
 	const rcasmParser = new Parser();
 	//	const rcasmHover = new RCASMHover(options && options.clientCapabilities);
-	//	const rcasmCompletion = new RCASMCompletion(options && options.clientCapabilities);
-		const rcasmValidation = new RCASMValidation();
+	const rcasmCompletion = new RCASMCompletion(options && options.clientCapabilities);
+	const rcasmValidation = new RCASMValidation();
 
 	// if (options && options.customDataProviders) {
 	// 	handleCustomDataProviders(options.customDataProviders);
@@ -58,7 +58,7 @@ export function getLanguageService(options?: LanguageServiceOptions): LanguageSe
 		//		createScanner,
 		doValidation: rcasmValidation.doValidation.bind(rcasmValidation),
 		parseProgram: rcasmParser.parseProgram.bind(rcasmParser),
-		//		doComplete: rcasmCompletion.doComplete.bind(rcasmCompletion),
+		doComplete: rcasmCompletion.doComplete.bind(rcasmCompletion),
 		//		setCompletionParticipants: rcasmCompletion.setCompletionParticipants.bind(rcasmCompletion),
 		//		doHover: rcasmHover.doHover.bind(rcasmHover),
 		//		format,

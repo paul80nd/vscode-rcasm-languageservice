@@ -35,6 +35,44 @@ export enum OpcodeType {
 	BNE, BEQ, BLT, BLE, BMI, BCS
 }
 
+export function getNodeAtOffset(node: Node, offset: number): Node | null {
+
+	let candidate: Node | null = null;
+	if (!node || offset < node.offset || offset > node.end) {
+		return null;
+	}
+
+	// Find the shortest node at the position
+	node.accept((node) => {
+		if (node.offset === -1 && node.length === -1) {
+			return true;
+		}
+		if (node.offset <= offset && node.end >= offset) {
+			if (!candidate) {
+				candidate = node;
+			} else if (node.length <= candidate.length) {
+				candidate = node;
+			}
+			return true;
+		}
+		return false;
+	});
+	return candidate;
+}
+
+export function getNodePath(node: Node, offset: number): Node[] {
+
+	let candidate = getNodeAtOffset(node, offset);
+	const path: Node[] = [];
+
+	while (candidate) {
+		path.unshift(candidate);
+		candidate = candidate.parent;
+	}
+
+	return path;
+}
+
 export interface ITextProvider {
 	(offset: number, length: number): string;
 }

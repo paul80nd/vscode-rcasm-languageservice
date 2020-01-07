@@ -3,9 +3,11 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-//import { Position, Range, MarkupContent, MarkupKind } from 'vscode-languageserver-types';
+import { /* Position, Range, */ MarkupContent, MarkupKind } from 'vscode-languageserver-types';
 //import { TextDocument } from 'vscode-languageserver-textdocument';
 //import { IToken } from './parser/rcasmScanner';
+
+export * from 'vscode-languageserver-types';
 
 // export interface RCASMFormatConfiguration {
 // 	tabSize?: number;
@@ -24,10 +26,10 @@
 // 	extraLiners?: string;
 // }
 
-// export interface CompletionConfiguration {
-// 	[provider: string]: boolean | undefined;
-// 	hideAutoCompleteProposals?: boolean;
-// }
+export interface CompletionConfiguration {
+	// 	[provider: string]: boolean | undefined;
+	//	hideAutoCompleteProposals?: boolean;
+}
 
 export interface Node {
 	tag: string | undefined;
@@ -86,103 +88,76 @@ export type Program = {
 // 	url: string;
 // }
 
-// export interface ITagData {
-// 	name: string;
-// 	description?: string | MarkupContent;
-// 	attributes: IAttributeData[];
-// 	references?: IReference[];
-// }
+export interface IMnemonicData {
+	name: string;
+	description?: string | MarkupContent;
+	syntax?: string;
+}
 
-// export interface IAttributeData {
-// 	name: string;
-// 	description?: string | MarkupContent;
-// 	valueSet?: string;
-// 	values?: IValueData[];
-// 	references?: IReference[];
-// }
+export interface RCASMDataV1 {
+	version: 1;
+	mnemonics?: IMnemonicData[];
+}
 
-// export interface IValueData {
-// 	name: string;
-// 	description?: string | MarkupContent;
-// 	references?: IReference[];
-// }
+export interface IRCASMDataProvider {
+	provideMnemonics(): IMnemonicData[];
+}
 
-// export interface IValueSet {
-// 	name: string;
-// 	values: IValueData[];
-// }
+/**
+ * Describes what LSP capabilities the client supports
+ */
+export interface ClientCapabilities {
+	/**
+	 * The text document client capabilities
+	 */
+	textDocument?: {
+		// 		/**
+		// 		 * Capabilities specific to completions.
+		// 		 */
+		// 		completion?: {
+		// 			/**
+		// 			 * The client supports the following `CompletionItem` specific
+		// 			 * capabilities.
+		// 			 */
+		// 			completionItem?: {
+		// 				/**
+		// 				 * Client supports the follow content formats for the documentation
+		// 				 * property. The order describes the preferred format of the client.
+		// 				 */
+		// 				documentationFormat?: MarkupKind[];
+		// 			};
 
-// export interface RCASMDataV1 {
-// 	version: 1 | 1.1;
-// 	tags?: ITagData[];
-// 	globalAttributes?: IAttributeData[];
-// 	valueSets?: IValueSet[];
-// }
+		// 		};
+		/**
+		 * Capabilities specific to hovers.
+		 */
+		hover?: {
+			/**
+			 * Client supports the follow content formats for the content
+			 * property. The order describes the preferred format of the client.
+			 */
+			contentFormat?: MarkupKind[];
+		};
+	};
+}
 
-// export interface IRCASMDataProvider {
-// 	getId(): string;
-// 	isApplicable(languageId: string): boolean;
-
-// 	provideTags(): ITagData[];
-// 	provideAttributes(tag: string): IAttributeData[];
-// 	provideValues(tag: string, attribute: string): IValueData[];
-// }
-
-// /**
-//  * Describes what LSP capabilities the client supports
-//  */
-// export interface ClientCapabilities {
-// 	/**
-// 	 * The text document client capabilities
-// 	 */
-// 	textDocument?: {
-// 		/**
-// 		 * Capabilities specific to completions.
-// 		 */
-// 		completion?: {
-// 			/**
-// 			 * The client supports the following `CompletionItem` specific
-// 			 * capabilities.
-// 			 */
-// 			completionItem?: {
-// 				/**
-// 				 * Client supports the follow content formats for the documentation
-// 				 * property. The order describes the preferred format of the client.
-// 				 */
-// 				documentationFormat?: MarkupKind[];
-// 			};
-
-// 		};
-// 		/**
-// 		 * Capabilities specific to hovers.
-// 		 */
-// 		hover?: {
-// 			/**
-// 			 * Client supports the follow content formats for the content
-// 			 * property. The order describes the preferred format of the client.
-// 			 */
-// 			contentFormat?: MarkupKind[];
-// 		};
-// 	};
-// }
-
-// export namespace ClientCapabilities {
-// 	export const LATEST: ClientCapabilities = {
-// 		textDocument: {
-// 			completion: {
-// 				completionItem: {
-// 					documentationFormat: [MarkupKind.Markdown, MarkupKind.PlainText]
-// 				}
-// 			},
-// 			hover: {
-// 				contentFormat: [MarkupKind.Markdown, MarkupKind.PlainText]
-// 			}
-// 		}
-// 	};
-// }
+export namespace ClientCapabilities {
+	export const LATEST: ClientCapabilities = {
+		textDocument: {
+			// 			completion: {
+			// 				completionItem: {
+			// 					documentationFormat: [MarkupKind.Markdown, MarkupKind.PlainText]
+			// 				}
+			// 			},
+			hover: {
+				contentFormat: [MarkupKind.Markdown, MarkupKind.PlainText]
+			}
+		}
+	};
+}
 
 export interface LanguageSettings {
-	validate?: boolean;	
+	validate?: boolean;
 }
 
 export interface LanguageServiceOptions {
@@ -192,8 +167,8 @@ export interface LanguageServiceOptions {
 	// 	//  */
 	// 	// customDataProviders?: IRCASMDataProvider[];
 
-	// 	/**
-	// 	 * Describes the LSP capabilities the client supports.
-	// 	 */
-	// 	clientCapabilities?: ClientCapabilities;
+	/**
+	 * Describes the LSP capabilities the client supports.
+	 */
+	clientCapabilities?: ClientCapabilities;
 }
