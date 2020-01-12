@@ -34,11 +34,7 @@ function assertCompletion(completions: CompletionList, expected: ItemDescription
 	assert.equal(matches.length, 1, expected.label + " should only existing once: Actual: " + completions.items.map(c => c.label).join(', '));
 	const match = matches[0];
 	if (expected.documentation) {
-		if (typeof expected.documentation === 'string') {
-			assert.equal(match.documentation, expected.documentation);
-		} else {
-			assert.equal((match.documentation as MarkupContent).value, expected.documentation.value);
-		}
+		assert.deepEqual(match.documentation, expected.documentation);
 	}
 	if (expected.kind) {
 		assert.equal(match.kind, expected.kind);
@@ -78,16 +74,3 @@ export function testCompletionFor(value: string, expected: { count?: number, ite
 		}
 	}
 }
-
-// export function testTagCompletion(value: string, expected: string | null): void {
-// 	const offset = value.indexOf('|');
-// 	value = value.substr(0, offset) + value.substr(offset + 1);
-
-// 	const ls = rcasmLanguageService.getLanguageService();
-
-// 	const document = TextDocument.create('test://test/test.html', 'html', 0, value);
-// 	const position = document.positionAt(offset);
-// 	const htmlDoc = ls.parseRCASMDocument(document);
-// 	const actual = ls.doTagComplete(document, position, htmlDoc);
-// 	assert.equal(actual, expected);
-// }

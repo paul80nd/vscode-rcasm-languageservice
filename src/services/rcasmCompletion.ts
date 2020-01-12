@@ -47,6 +47,9 @@ export class RCASMCompletion {
 			for (let i = this.nodePath.length - 1; i >= 0; i--) {
 				const node = this.nodePath[i];
 
+				if (node instanceof nodes.Opcode) {
+					continue;
+				}
 				if (node.parent === null) {
 					this.getCompletionForTopLevel(result);
 				}
@@ -86,7 +89,7 @@ export class RCASMCompletion {
 				//tags: isDeprecated(entry) ? [CompletionItemTag.Deprecated] : [],
 				textEdit: TextEdit.replace(range, insertText),
 				insertTextFormat: InsertTextFormat.Snippet,
-				kind: CompletionItemKind.Property
+				kind: CompletionItemKind.Function
 			};
 
 			result.items.push(item);

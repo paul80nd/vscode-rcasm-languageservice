@@ -42,9 +42,9 @@ function getEntryStringDescription(entry: IEntry2): string {
 	// if (browserLabel) {
 	// 	result += '\n(' + browserLabel + ')';
 	// }
-	// if ('syntax' in entry) {
-	// 	result += `\n\nSyntax: ${entry.syntax}`;
-	// }
+	if ('syntax' in entry) {
+		result += `\n\nSyntax: ${entry.syntax}`;
+	}
 	// if (entry.references && entry.references.length > 0) {
 	// 	result += '\n\n';
 	// 	result += entry.references.map(r => {
@@ -77,9 +77,9 @@ function getEntryMarkdownDescription(entry: IEntry2): string {
 	// if (browserLabel) {
 	// 	result += '\n\n(' + browserLabel + ')';
 	// }
-	// if ('syntax' in entry) {
-	// 	result += `\n\nSyntax: ${entry.syntax}`;
-	// }
+	if ('syntax' in entry) {
+		result += `\n\nSyntax: ${entry.syntax}`;
+	}
 	// if (entry.references && entry.references.length > 0) {
 	// 	result += '\n\n';
 	// 	result += entry.references.map(r => {
