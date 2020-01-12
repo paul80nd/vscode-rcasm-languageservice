@@ -18,36 +18,42 @@ export const rcasmData: RCASMDataV1 = {
 		{
 			"name": "bcs",
 			"summary": "Branch if Carry Set [GOTO]",
+			"snippet": "bcs ${1:label}",
 			"description": "Jumps to the given address if the carry flag is set.",
 			"syntax": "<label>"
 		},
 		{
 			"name": "beq",
 			"summary": "Branch if Equal/Zero [GOTO]",
+			"snippet": "beq ${1:label}",
 			"description": "Jumps to the given address if the zero flag is set (equal).",
 			"syntax": "<label>"
 		},
 		{
 			"name": "ble",
 			"summary": "Branch if Less Than or Equal (Sign+Zero) [GOTO]",
+			"snippet": "ble ${1:label}",
 			"description": "Jumps to the given address if the sign or zero flag is set (less than or equal).",
 			"syntax": "<label>"
 		},
 		{
 			"name": "blt",
 			"summary": "Branch if Less Than (Sign) [GOTO]",
+			"snippet": "blt ${1:label}",
 			"description": "Jumps to the given address if the sign flag is set (less than).",
 			"syntax": "<label>"
 		},
 		{
 			"name": "bmi",
 			"summary": "Branch if Minus/Sign [GOTO]",
+			"snippet": "bmi ${1:label}",
 			"description": "Jumps to the given address if the sign flag is set (negative).",
 			"syntax": "<label>"
 		},
 		{
 			"name": "bne",
 			"summary": "Branch if Not Equal/Zero [GOTO]",
+			"snippet": "bne ${1:label}",
 			"description": "Jumps to the given address if the zero flag is not set (not equal).",
 			"syntax": "<label>"
 		},
@@ -78,24 +84,28 @@ export const rcasmData: RCASMDataV1 = {
 		{
 			"name": "jmp",
 			"summary": "Jump to Label [GOTO]",
+			"snippet": "jmp ${1:label}",
 			"description": "Unconditionally jumps to the given address.",
 			"syntax": "<label>"
 		},
 		{
 			"name": "jsr",
 			"summary": "Call Subroutine (Jump and Link) [GOTO]",
+			"snippet": "jsr ${1:label}",
 			"description": "Calls the subroutine at the given address.",
 			"syntax": "<label>"
 		},
 		{
 			"name": "ldi",
 			"summary": "Load Immediate [SETAB]",
+			"snippet": "ldi ${1:a},${2:0}",
 			"description": "Loads an 8-bit value in to register A/B or a 16-bit value in to register M/J.",
 			"syntax": "[ <target>{a|b} , <value>{-16,15} ] | [ <target>{m|j} , [ <value>{0x0000,0xFFFF} | <label> ] ]"
  		},
 		{
-			"name": "mov",
+			"name": "mov",			
 			"summary": "Copy Register to Register [MOV8]",
+			"snippet": "mov ${1:b},${2:a}",
 			"description": "Copies the content of one 8-bit register to another.",
 			"syntax": "<destination>{a,d} , <source>{a,d}"
 		},
@@ -108,6 +118,7 @@ export const rcasmData: RCASMDataV1 = {
 		{
 			"name": "opc",
 			"summary": "Literal Opcode",
+			"snippet": "opc ${1:opcode}",
 			"description": "Performs the given machine opcode directly.",
 			"syntax": "[ <opcode>{0x00,0xFF} | <opcode>{0b00000000,0b11111111} ]"
 		},

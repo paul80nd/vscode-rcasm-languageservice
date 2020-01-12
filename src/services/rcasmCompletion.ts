@@ -81,7 +81,7 @@ export class RCASMCompletion {
 			let range: Range;
 			let insertText: string;
 			range = this.getCompletionRange(null);
-			insertText = entry.name;
+			insertText = entry.snippet ?? entry.name;
 
 			const item: CompletionItem = {
 				label: entry.name,

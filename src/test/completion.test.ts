@@ -6,8 +6,8 @@ suite('RCASM Completion', () => {
 
 		testCompletionFor(' |', {
 			items: [
-				{ label: 'ldi', resultText: ' ldi' },
-				{ label: 'mov', resultText: ' mov' }
+				{ label: 'ldi', resultText: ' ldi ${1:a},${2:0}' },
+				{ label: 'inc', resultText: ' inc' }
 			]
 		});
 
