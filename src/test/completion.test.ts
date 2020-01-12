@@ -10,13 +10,22 @@ suite('RCASM Completion', () => {
 				{ label: 'mov', resultText: ' mov' }
 			]
 		});
-		
+
+	});
+
+	test('Completion includes detail', () => {
+		testCompletionFor('bc|', {
+			items: [
+				{ label: 'bcs', detail: 'Branch if Carry Set [GOTO]' }
+			]
+		});
 	});
 
 	test('Completion includes documentation', () => {
 		testCompletionFor('ad|', {
 			items: [
-				{ label: 'add',
+				{
+					label: 'add',
 					documentation: {
 						kind: 'markdown',
 						value:

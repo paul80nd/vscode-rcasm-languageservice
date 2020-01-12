@@ -90,6 +90,7 @@ export type Program = {
 
 export interface IMnemonicData {
 	name: string;
+	summary: string;
 	description?: string | MarkupContent;
 	syntax?: string;
 }

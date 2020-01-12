@@ -11,6 +11,7 @@ import { TextDocument } from 'vscode-languageserver-textdocument';
 
 interface ItemDescription {
 	label: string;
+	detail?: string;
 	documentation?: string | MarkupContent;
 	kind?: CompletionItemKind;
 	resultText?: string;
@@ -33,6 +34,9 @@ function assertCompletion(completions: CompletionList, expected: ItemDescription
 
 	assert.equal(matches.length, 1, expected.label + " should only existing once: Actual: " + completions.items.map(c => c.label).join(', '));
 	const match = matches[0];
+	if (expected.detail) {
+		assert.equal(match.detail, expected.detail);
+	}
 	if (expected.documentation) {
 		assert.deepEqual(match.documentation, expected.documentation);
 	}

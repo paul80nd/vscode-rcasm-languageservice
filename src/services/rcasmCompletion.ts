@@ -85,8 +85,8 @@ export class RCASMCompletion {
 
 			const item: CompletionItem = {
 				label: entry.name,
+				detail: entry.summary,
 				documentation: languageFacts.getEntryDescription(entry, this.doesSupportMarkdown()),
-				//tags: isDeprecated(entry) ? [CompletionItemTag.Deprecated] : [],
 				textEdit: TextEdit.replace(range, insertText),
 				insertTextFormat: InsertTextFormat.Snippet,
 				kind: CompletionItemKind.Function
