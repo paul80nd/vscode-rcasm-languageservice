@@ -12,7 +12,7 @@ import { CompletionConfiguration, InsertTextFormat, ClientCapabilities } from '.
 import { isDefined } from '../utils/objects';
 
 export class RCASMCompletion {
-	
+
 	private supportsMarkdown: boolean | undefined;
 
 	position!: Position;
@@ -21,17 +21,16 @@ export class RCASMCompletion {
 	textDocument!: TextDocument;
 	program!: nodes.Program;
 	defaultReplaceRange!: Range;
-	nodePath!: nodes.Node[];
 
-	constructor(private clientCapabilities: ClientCapabilities | undefined) {		
+	constructor(private clientCapabilities: ClientCapabilities | undefined) {
 	}
 
 	doComplete(document: TextDocument, position: Position, program: nodes.Program, settings?: CompletionConfiguration): CompletionList {
-		
+
 		this.offset = document.offsetAt(position);
 		this.position = position;
 		this.currentWord = getCurrentWord(document, this.offset);
-		this.defaultReplaceRange = Range.create(Position.create(this.position.line, this.position.character - this.currentWord.length), this.position);		
+		this.defaultReplaceRange = Range.create(Position.create(this.position.line, this.position.character - this.currentWord.length), this.position);
 		this.textDocument = document;
 		this.program = program;
 
@@ -42,19 +41,13 @@ export class RCASMCompletion {
 				items: []
 			};
 
-			this.nodePath = nodes.getNodePath(this.program, this.offset);
-
-			for (let i = this.nodePath.length - 1; i >= 0; i--) {
-				const node = this.nodePath[i];
-
-				if (node instanceof nodes.Opcode) {
-					continue;
-				}
-				if (node.parent === null) {
-					this.getCompletionForTopLevel(result);
-				}
+			// Provide mnemonic completions following label or tabs/spaces at start of line only
+			var textOnLine = document.getText(Range.create(Position.create(this.position.line, 0), this.position));
+			var match = textOnLine.match(/^([a-z]+:)?([ \t]+)?([a-z]{0,3})$/i);
+			if (match) {
+				this.getCompletionsForMnemonic(result);
 			}
-						
+
 			return result;
 
 		} finally {
@@ -64,19 +57,13 @@ export class RCASMCompletion {
 			this.textDocument = null!;
 			this.program = null!;
 			this.defaultReplaceRange = null!;
-			this.nodePath = null!;
 		}
-	}
-
-	public getCompletionForTopLevel(result: CompletionList): CompletionList {
-		this.getCompletionsForMnemonic(result);
-		return result;
 	}
 
 	public getCompletionsForMnemonic(result: CompletionList): CompletionList {
 
 		const properties = languageFacts.rcasmDataManager.getMnemonics();
-		
+
 		properties.forEach(entry => {
 			let range: Range;
 			let insertText: string;
@@ -94,9 +81,9 @@ export class RCASMCompletion {
 
 			result.items.push(item);
 		});
-						
+
 		return result;
-	}	
+	}
 
 	private doesSupportMarkdown(): boolean {
 		if (!isDefined(this.supportsMarkdown)) {
