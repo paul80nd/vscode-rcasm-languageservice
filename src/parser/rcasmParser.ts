@@ -223,7 +223,7 @@ export class Parser {
 		// Pick up comment (optional)
 		node.setComment(this._parseComment());
 
-		return node;
+		return this.finish(node);
 	}
 
 	public _parseComment(): nodes.Node | null {
@@ -276,10 +276,9 @@ export class Parser {
 			case nodes.OpcodeType.BCS:
 				return this._processUnaryOpcode(node,
 					() => this._parseLabelRef(), ParseError.LabelRefExpected);
-
 		}
 
-		return node;
+		return this.finish(node);
 	}
 
 	private _processUnaryOpcode(node: nodes.Opcode,
@@ -303,7 +302,7 @@ export class Parser {
 			// Try and continue to next param
 			this.markError(node, firstParamMissingError);
 			if (this.peekIsBeyondOpcode()) {
-				return node;
+				return this.finish(node);
 			}
 			this.consumeToken();
 		}
@@ -313,7 +312,7 @@ export class Parser {
 			// Try and continue to next param
 			this.markError(node, ParseError.CommaExpected);
 			if (this.peekIsBeyondOpcode()) {
-				return node;
+				return this.finish(node);
 			}
 			this.consumeToken();
 		}
@@ -335,7 +334,7 @@ export class Parser {
 			// Try and continue to next param
 			this.markError(node, ParseError.RegisterExpected);
 			if (this.peekIsBeyondOpcode()) {
-				return node;
+				return this.finish(node);
 			}
 			this.consumeToken();
 		}
@@ -349,7 +348,7 @@ export class Parser {
 			// Try and continue to next param
 			this.markError(node, ParseError.CommaExpected);
 			if (this.peekIsBeyondOpcode()) {
-				return node;
+				return this.finish(node);
 			}
 			this.consumeToken();
 		}
@@ -406,7 +405,7 @@ export class Parser {
 		const node = <nodes.Opcode>this.create(nodes.Opcode);
 		node.opcode = opcodeType;
 		this.consumeToken();
-		return this.finish(node);
+		return node;
 	}
 
 	public _parseAluRegister(): nodes.Register | null {

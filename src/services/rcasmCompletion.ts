@@ -41,12 +41,13 @@ export class RCASMCompletion {
 				items: []
 			};
 
-			// Provide mnemonic completions following label or tabs/spaces at start of line only
 			var textOnLine = document.getText(Range.create(Position.create(this.position.line, 0), this.position));
-			var match = textOnLine.match(/^([a-z]+:)?([ \t]+)?([a-z]{0,3})$/i);
-			if (match) {
+
+			// Provide mnemonic completions following label or tabs/spaces at start of line only
+			if (textOnLine.match(/^([a-z]+:)?([ \t]+)?([a-z]{0,3})$/i)) {
 				this.getCompletionsForMnemonic(result);
-			}
+				return result;
+			} 
 
 			return result;
 

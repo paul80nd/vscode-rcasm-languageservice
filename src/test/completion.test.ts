@@ -2,16 +2,48 @@ import { testCompletionFor /*, testTagCompletion*/ } from "./completionUtil";
 
 suite('RCASM Completion', () => {
 
-	test('Complete', function (): any {
+	test('Basic Completion', function (): any {
+
+		testCompletionFor('|', {
+			items: [{ label: 'ldi', resultText: 'ldi ${1:a},${2:0}' }, { label: 'add', resultText: 'add' }]
+		});
 
 		testCompletionFor(' |', {
-			items: [
-				{ label: 'ldi', resultText: ' ldi ${1:a},${2:0}' },
-				{ label: 'inc', resultText: ' inc' }
-			]
+			items: [{ label: 'ldi', resultText: ' ldi ${1:a},${2:0}' }, { label: 'add', resultText: ' add' }]
+		});
+
+		testCompletionFor(' l|', {
+			items: [{ label: 'ldi', resultText: ' ldi ${1:a},${2:0}' }]
+		});
+
+		testCompletionFor('label: |', {
+			items: [{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0}' }, { label: 'add', resultText: 'label: add' }]
+		});
+		
+		testCompletionFor('label: l|', {
+			items: [{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0}' }]
+		});
+
+		testCompletionFor(' ld| a,5', {
+			items: [{ label: 'ldi', resultText: ' ldi ${1:a},${2:0} a,5' }]
+		});
+
+		testCompletionFor('label: l| ; comment', {
+			items: [{ label: 'ldi', resultText: 'label: ldi ${1:a},${2:0} ; comment' }]
 		});
 
 	});
+
+	// test('Alu Opcode Completion', function (): any {
+
+	// 	testCompletionFor('add |', {
+	// 		items: [
+	// 			{ label: 'a', resultText: ' a' },
+	// 			{ label: 'd', resultText: ' d' }
+	// 		]
+	// 	});
+
+	// });
 
 	test('Completion includes detail', () => {
 		testCompletionFor('bc|', {
