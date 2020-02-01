@@ -90,4 +90,70 @@ function getEntryMarkdownDescription(entry: IEntry2): string {
 	return result;
 }
 
+export function getEntrySpecificDescription(entry: IEntry2, paramNames: string[], doesSupportMarkdown: boolean): MarkupContent {
+	if (doesSupportMarkdown) {
+		return {
+			kind: 'markdown',
+			value: fillParamPlaceholders(getEntrySpecificMarkdownDescription(entry), paramNames)
+		};
+	} else {
+		return {
+			kind: 'plaintext',
+			value: fillParamPlaceholders(getEntrySpecificStringDescription(entry), paramNames)
+		};
+	}
+}
+
+function fillParamPlaceholders(value: string, paramNames: string[]): string {
+	if (!paramNames || paramNames.length === 0) {
+		return value;
+	}
+
+	for (let i = 0; i < paramNames.length; i++) {
+		value = value.replace(`{${i}}`, paramNames[i]);
+	}
+
+	return value;
+}
+
+function getEntrySpecificStringDescription(entry: IEntry2): string {
+	if (!entry.synopsis || entry.synopsis === '') {
+		return '';
+	}
+
+	if (typeof entry.synopsis !== 'string') {
+		return entry.synopsis.value;
+	}
+
+	let result: string = '';
+
+	if (entry.summary) {
+		result += `${entry.summary}\n\n`;
+	}
+
+	result += entry.synopsis;
+
+	return result;
+}
+
+function getEntrySpecificMarkdownDescription(entry: IEntry2): string {
+	if (!entry.synopsis || entry.synopsis === '') {
+		return '';
+	}
+
+	let result: string = '';
+
+	if (entry.summary) {
+		result += `${entry.summary}\n\n`;
+	}
+
+	if (typeof entry.synopsis === 'string') {
+		result += entry.synopsis;
+	} else {
+		result = entry.synopsis.value;
+	}
+
+	return result;
+}
+
 export type IEntry2 = IMnemonicData;

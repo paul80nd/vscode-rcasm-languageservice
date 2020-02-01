@@ -7,14 +7,14 @@
 import { Parser } from './parser/rcasmParser';
 import { RCASMValidation } from './services/rcasmValidation';
 import { RCASMCompletion } from './services/rcasmCompletion';
-// import { RCASMHover } from './services/rcasmHover';
+import { RCASMHover } from './services/rcasmHover';
 // import { format } from './services/rcasmFormatter';
 // import { findDocumentLinks } from './services/rcasmLinks';
 // import { findDocumentHighlights } from './services/rcasmHighlighting';
 // import { findDocumentSymbols } from './services/rcasmSymbolsProvider';
 // import { doRename } from './services/rcasmRename';
 // import { findMatchingTagPosition } from './services/rcasmMatchingTagPosition';
-import { Diagnostic, Position, CompletionList, /*Hover, Range, SymbolInformation, TextEdit, DocumentHighlight, DocumentLink, FoldingRange, SelectionRange, WorkspaceEdit */ } from 'vscode-languageserver-types';
+import { Diagnostic, Position, CompletionList, Hover, /*Range, SymbolInformation, TextEdit, DocumentHighlight, DocumentLink, FoldingRange, SelectionRange, WorkspaceEdit */ } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { /* Scanner, */ Program, CompletionConfiguration, /* ICompletionParticipant, RCASMFormatConfiguration, DocumentContext, IRCASMDataProvider, RCASMDataV1, */ LanguageSettings, LanguageServiceOptions } from './rcasmLanguageTypes';
 // import { getFoldingRanges } from './services/rcasmFolding';
@@ -33,7 +33,7 @@ export interface LanguageService {
 	//	findDocumentHighlights(document: TextDocument, position: Position, rcasmDocument: RCASMDocument): DocumentHighlight[];
 	doComplete(document: TextDocument, position: Position, program: Program, options?: CompletionConfiguration): CompletionList;
 	//	setCompletionParticipants(registeredCompletionParticipants: ICompletionParticipant[]): void;
-	//	doHover(document: TextDocument, position: Position, rcasmDocument: RCASMDocument): Hover | null;
+	doHover(document: TextDocument, position: Position, program: Program): Hover | null;
 	//	format(document: TextDocument, range: Range | undefined, options: RCASMFormatConfiguration): TextEdit[];
 	//	findDocumentLinks(document: TextDocument, documentContext: DocumentContext): DocumentLink[];
 	//	findDocumentSymbols(document: TextDocument, rcasmDocument: RCASMDocument): SymbolInformation[];
@@ -46,7 +46,7 @@ export interface LanguageService {
 
 export function getLanguageService(options?: LanguageServiceOptions): LanguageService {
 	const rcasmParser = new Parser();
-	//	const rcasmHover = new RCASMHover(options && options.clientCapabilities);
+	const rcasmHover = new RCASMHover(options && options.clientCapabilities);
 	const rcasmCompletion = new RCASMCompletion(options && options.clientCapabilities);
 	const rcasmValidation = new RCASMValidation();
 
@@ -60,7 +60,7 @@ export function getLanguageService(options?: LanguageServiceOptions): LanguageSe
 		parseProgram: rcasmParser.parseProgram.bind(rcasmParser),
 		doComplete: rcasmCompletion.doComplete.bind(rcasmCompletion),
 		//		setCompletionParticipants: rcasmCompletion.setCompletionParticipants.bind(rcasmCompletion),
-		//		doHover: rcasmHover.doHover.bind(rcasmHover),
+		doHover: rcasmHover.doHover.bind(rcasmHover),
 		//		format,
 		//		findDocumentHighlights,
 		//		findDocumentLinks,

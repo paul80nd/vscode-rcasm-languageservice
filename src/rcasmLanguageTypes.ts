@@ -93,6 +93,7 @@ export interface IMnemonicData {
 	summary: string;
 	snippet?: string;
 	description?: string | MarkupContent;
+	synopsis?: string | MarkupContent;
 	syntax?: string;
 }
 

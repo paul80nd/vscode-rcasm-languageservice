@@ -1,210 +1,138 @@
-// /*---------------------------------------------------------------------------------------------
-//  *  Copyright (c) Microsoft Corporation. All rights reserved.
-//  *  Licensed under the MIT License. See License.txt in the project root for license information.
-//  *--------------------------------------------------------------------------------------------*/
+import * as nodes from '../parser/rcasmNodes';
+import * as languageFacts from '../languageFacts/facts';
+import { Range, Position, Hover, MarkedString, MarkupContent, MarkupKind } from 'vscode-languageserver-types';
+import { TextDocument } from 'vscode-languageserver-textdocument';
+import { ClientCapabilities } from '../rcasmLanguageTypes';
+import { isDefined } from '../utils/objects';
 
-// import { RCASMDocument } from '../parser/rcasmParser';
-// import { createScanner } from '../parser/rcasmScanner';
-// import { Range, Position, Hover, MarkedString, MarkupContent, MarkupKind } from 'vscode-languageserver-types';
-// import { TextDocument } from 'vscode-languageserver-textdocument';
-// import { TokenType, ClientCapabilities } from '../rcasmLanguageTypes';
-// import { getAllDataProviders } from '../languageFacts/builtinDataProviders';
-// import { isDefined } from '../utils/object';
-// import { generateDocumentation } from '../languageFacts/dataProvider';
+export class RCASMHover {
+	private supportsMarkdown: boolean | undefined;
 
-// export class RCASMHover {
-// 	private supportsMarkdown: boolean | undefined;
+	constructor(private clientCapabilities: ClientCapabilities | undefined) { }
 
-// 	constructor(private clientCapabilities: ClientCapabilities | undefined) { }
+	doHover(document: TextDocument, position: Position, program: nodes.Program): Hover | null {
 
-// 	doHover(document: TextDocument, position: Position, rcasmDocument: RCASMDocument): Hover | null {
-// 		const convertContents = this.convertContents.bind(this);
-// 		const doesSupportMarkdown = this.doesSupportMarkdown();
+		function getRange(node: nodes.Node) {
+			return Range.create(document.positionAt(node.offset), document.positionAt(node.end));
+		}
 
-// 		const offset = document.offsetAt(position);
-// 		const node = rcasmDocument.findNodeAt(offset);
-// 		if (!node || !node.tag) {
-// 			return null;
-// 		}
-// 		const dataProviders = getAllDataProviders().filter(p => p.isApplicable(document.languageId));
+		const offset = document.offsetAt(position);
+		const nodepath = nodes.getNodePath(program, offset);
 
-// 		function getTagHover(currTag: string, range: Range, open: boolean): Hover | null {
-// 			currTag = currTag.toLowerCase();
+		/**
+		 * nodepath is top-down
+		 * Build up the hover by appending inner node's information
+		 */
+		let hover: Hover | null = null;
 
-// 			for (const provider of dataProviders) {
-// 				let hover: Hover | null = null;
+		for (let i = 0; i < nodepath.length; i++) {
+			const node = nodepath[i];
 
-// 				provider.provideTags().forEach(tag => {
-// 					if (tag.name.toLowerCase() === currTag.toLowerCase()) {
-// 						const tagLabel = open ? '<' + currTag + '>' : '</' + currTag + '>';
-// 						const markupContent = generateDocumentation(tag, doesSupportMarkdown);
-// 						markupContent.value = '```html\n' + tagLabel + '\n```\n' + markupContent.value;
-// 						hover = { contents: markupContent, range };
-// 					}
-// 				});
+			if (node instanceof nodes.Instruction && node.opcode) {
+				const opcode = node.opcode;
+				const mnemonicName = nodes.OpcodeType[opcode.opcode].toLowerCase();
+				const entry = languageFacts.rcasmDataManager.getMnemonic(mnemonicName);
+				if (entry) {
+					const paramNames = this.getParamNames(opcode);
+					const content = languageFacts.getEntrySpecificDescription(entry, paramNames, this.doesSupportMarkdown());
+					hover = {
+						contents: content,
+						range: getRange(node)
+					};
+				}
+				continue;
+			}
+		}
 
-// 				if (hover) {
-// 					(hover as Hover).contents = convertContents((hover as Hover).contents);
-// 					return hover;
-// 				}
-// 			}
-// 			return null;
-// 		}
+		if (hover) {
+			hover.contents = this.convertContents(hover.contents);
+		}
 
-// 		function getAttrHover(currTag: string, currAttr: string, range: Range): Hover | null {
-// 			currTag = currTag.toLowerCase();
+		return hover;
+	}
 
-// 			for (const provider of dataProviders) {
-// 				let hover: Hover | null = null;
+	private getParamNames(opcode: nodes.Opcode): string[] {
+		let paramNames: string[] = [];
 
-// 				provider.provideAttributes(currTag).forEach(attr => {
-// 					if (currAttr === attr.name && attr.description) {
-// 						hover = { contents: generateDocumentation(attr, doesSupportMarkdown), range };
-// 					}
-// 				});
+		if (opcode.primaryParam) {
+			paramNames.push(this.getParamName(opcode.primaryParam, opcode.opcode));
+		} else {
+			paramNames.push('?');
+		}
 
-// 				if (hover) {
-// 					(hover as Hover).contents = convertContents((hover as Hover).contents);
-// 					return hover;
-// 				}
-// 			}
-// 			return null;
-// 		}
+		if (opcode.secondaryParam) {
+			paramNames.push(this.getParamName(opcode.secondaryParam, opcode.opcode));
+		} else {
+			paramNames.push('?');
+		}
 
-// 		function getAttrValueHover(currTag: string, currAttr: string, currAttrValue: string, range: Range): Hover | null {
-// 			currTag = currTag.toLowerCase();
+		return paramNames;
+	}
 
-// 			for (const provider of dataProviders) {
-// 				let hover: Hover | null = null;
+	private getParamName(param: nodes.Node, opcode: nodes.OpcodeType): string {
 
-// 				provider.provideValues(currTag, currAttr).forEach(attrValue => {
-// 					if (currAttrValue === attrValue.name && attrValue.description) {
-// 						hover = { contents: generateDocumentation(attrValue, doesSupportMarkdown), range };
-// 					}
-// 				});
+		if (param.isErroneous()) {
+			return '?';
+		}
 
-// 				if (hover) {
-// 					(hover as Hover).contents = convertContents((hover as Hover).contents);
-// 					return hover;
-// 				}
-// 			}
-// 			return null;
-// 		}
+		if (param instanceof nodes.Register) {
+			const regParam = param as nodes.Register;
+			return nodes.RegisterType[regParam.register];
+		}
 
-// 		function getTagNameRange(tokenType: TokenType, startOffset: number): Range | null {
-// 			const scanner = createScanner(document.getText(), startOffset);
-// 			let token = scanner.scan();
-// 			while (token !== TokenType.EOS && (scanner.getTokenEnd() < offset || scanner.getTokenEnd() === offset && token !== tokenType)) {
-// 				token = scanner.scan();
-// 			}
-// 			if (token === tokenType && offset <= scanner.getTokenEnd()) {
-// 				return { start: document.positionAt(scanner.getTokenOffset()), end: document.positionAt(scanner.getTokenEnd()) };
-// 			}
-// 			return null;
-// 		}
+		if (param instanceof nodes.Label) {
+			const regLabel = param as nodes.Label;
+			return `(${regLabel.getText()})`;
+		}
 
-// 		if (node.endTagStart && offset >= node.endTagStart) {
-// 			const tagRange = getTagNameRange(TokenType.EndTag, node.endTagStart);
-// 			if (tagRange) {
-// 				return getTagHover(node.tag, tagRange, false);
-// 			}
-// 			return null;
-// 		}
+		if (param instanceof nodes.Constant) {
+			const constParam = param as nodes.Constant;
+			if (opcode === nodes.OpcodeType.LDI && constParam.value > 15) {
+				return `0x${constParam.value.toString(16).toUpperCase()}`;
+			}
+			return constParam.value.toString();
+		}
 
-// 		const tagRange = getTagNameRange(TokenType.StartTag, node.start);
-// 		if (tagRange) {
-// 			return getTagHover(node.tag, tagRange, true);
-// 		}
+		return '?';
+	}
 
-// 		const attrRange = getTagNameRange(TokenType.AttributeName, node.start);
-// 		if (attrRange) {
-// 			const tag = node.tag;
-// 			const attr = document.getText(attrRange);
-// 			return getAttrHover(tag, attr, attrRange);
-// 		}
+	private convertContents(contents: MarkupContent | MarkedString | MarkedString[]): MarkupContent | MarkedString | MarkedString[] {
+		if (!this.doesSupportMarkdown()) {
+			if (typeof contents === 'string') {
+				return contents;
+			}
+			// MarkupContent
+			else if ('kind' in contents) {
+				return {
+					kind: 'plaintext',
+					value: contents.value
+				};
+			}
+			// MarkedString[]
+			else if (Array.isArray(contents)) {
+				return contents.map(c => {
+					return typeof c === 'string' ? c : c.value;
+				});
+			}
+			// MarkedString
+			else {
+				return contents.value;
+			}
+		}
 
-// 		function scanAttrAndAttrValue(nodeStart: number, attrValueStart: number) {
-// 			const scanner = createScanner(document.getText(), nodeStart);
-// 			let token = scanner.scan();
-// 			let prevAttr = undefined;
-// 			while (token !== TokenType.EOS && (scanner.getTokenEnd() <= attrValueStart)) {
-// 				token = scanner.scan();
-// 				if (token === TokenType.AttributeName) {
-// 					prevAttr = scanner.getTokenText();
-// 				}
-// 			}
+		return contents;
+	}
 
-// 			return prevAttr;
-// 		}
+	private doesSupportMarkdown() {
+		if (!isDefined(this.supportsMarkdown)) {
+			if (!isDefined(this.clientCapabilities)) {
+				this.supportsMarkdown = true;
+				return this.supportsMarkdown;
+			}
 
-// 		const attrValueRange = getTagNameRange(TokenType.AttributeValue, node.start);
-// 		if (attrValueRange) {
-// 			const tag = node.tag;
-// 			const attrValue = trimQuotes(document.getText(attrValueRange));
-// 			const matchAttr = scanAttrAndAttrValue(node.start, document.offsetAt(attrValueRange.start));
-
-// 			if (matchAttr) {
-// 				return getAttrValueHover(tag, matchAttr, attrValue, attrValueRange);
-// 			}
-// 		}
-
-// 		return null;
-// 	}
-
-// 	private convertContents(contents: MarkupContent | MarkedString | MarkedString[]): MarkupContent | MarkedString | MarkedString[] {
-// 		if (!this.doesSupportMarkdown()) {
-// 			if (typeof contents === 'string') {
-// 				return contents;
-// 			}
-// 			// MarkupContent
-// 			else if ('kind' in contents) {
-// 				return {
-// 					kind: 'plaintext',
-// 					value: contents.value
-// 				};
-// 			}
-// 			// MarkedString[]
-// 			else if (Array.isArray(contents)) {
-// 				contents.map(c => {
-// 					return typeof c === 'string' ? c : c.value;
-// 				});
-// 			}
-// 			// MarkedString
-// 			else {
-// 				return contents.value;
-// 			}
-// 		}
-
-// 		return contents;
-// 	}
-
-// 	private doesSupportMarkdown(): boolean {
-// 		if (!isDefined(this.supportsMarkdown)) {
-// 			if (!isDefined(this.clientCapabilities)) {
-// 				this.supportsMarkdown = true;
-// 				return this.supportsMarkdown;
-// 			}
-
-// 			const hover = this.clientCapabilities && this.clientCapabilities.textDocument && this.clientCapabilities.textDocument.hover;
-// 			this.supportsMarkdown = hover && hover.contentFormat && Array.isArray(hover.contentFormat) && hover.contentFormat.indexOf(MarkupKind.Markdown) !== -1;
-// 		}
-// 		return <boolean>this.supportsMarkdown;
-// 	}
-// }
-
-// function trimQuotes(s: string) {
-// 	if (s.length <= 1) {
-// 		return s.replace(/['"]/, '');
-// 	}
-
-// 	if (s[0] === `'` || s[0] === `"`) {
-// 		s = s.slice(1);
-// 	}
-
-// 	if (s[s.length - 1] === `'` || s[s.length - 1] === `"`) {
-// 		s = s.slice(0, -1);
-// 	}
-
-// 	return s;
-// }
-
+			const hover = this.clientCapabilities?.textDocument && this.clientCapabilities.textDocument.hover;
+			this.supportsMarkdown = hover && hover.contentFormat && Array.isArray(hover.contentFormat) && hover.contentFormat.indexOf(MarkupKind.Markdown) !== -1;
+		}
+		return <boolean>this.supportsMarkdown;
+	}
+}
