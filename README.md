@@ -16,7 +16,6 @@ and the Monaco editor.
 - *setCompletionParticipants* allows participant to provide suggestions for specific tokens.
 - *doHover* provides hover information at a given location.
 - *format* formats the code at the given range.
-- *findDocumentLinks* finds all links in the document.
 - *findDocumentSymbols* finds all the symbols in the document.
 - *getFoldingRanges* return folding ranges for the given document.
 - *getSelectionRanges* return the selection ranges for the given document.

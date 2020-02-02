@@ -10,8 +10,6 @@ import { RCASMCompletion } from './services/rcasmCompletion';
 import { RCASMHover } from './services/rcasmHover';
 import { RCASMNavigation } from './services/rcasmNavigation';
 // import { format } from './services/rcasmFormatter';
-// import { findDocumentLinks } from './services/rcasmLinks';
-// import { findDocumentSymbols } from './services/rcasmSymbolsProvider';
 // import { doRename } from './services/rcasmRename';
 // import { findMatchingTagPosition } from './services/rcasmMatchingTagPosition';
 import { Diagnostic, Position, CompletionList, Hover, /*Range,*/ SymbolInformation, /*TextEdit, */DocumentHighlight, /*DocumentLink, FoldingRange, SelectionRange, WorkspaceEdit */ } from 'vscode-languageserver-types';
@@ -37,7 +35,6 @@ export interface LanguageService {
 	findDefinition(document: TextDocument, position: Position, program: Program): Location | null;
 	findReferences(document: TextDocument, position: Position, program: Program): Location[];
 	//	format(document: TextDocument, range: Range | undefined, options: RCASMFormatConfiguration): TextEdit[];
-	//	findDocumentLinks(document: TextDocument, documentContext: DocumentContext): DocumentLink[];
 	findDocumentSymbols(document: TextDocument, program: Program): SymbolInformation[];
 	//	doTagComplete(document: TextDocument, position: Position, rcasmDocument: RCASMDocument): string | null;
 	//	getFoldingRanges(document: TextDocument, context?: { rangeLimit?: number }): FoldingRange[];
@@ -68,7 +65,6 @@ export function getLanguageService(options?: LanguageServiceOptions): LanguageSe
 		findReferences: rcasmNavigation.findReferences.bind(rcasmNavigation),
 		//		format,
 		findDocumentHighlights: rcasmNavigation.findDocumentHighlights.bind(rcasmNavigation),
-		//		findDocumentLinks,
 		findDocumentSymbols: rcasmNavigation.findDocumentSymbols.bind(rcasmNavigation),
 		//		getFoldingRanges,
 		//		getSelectionRanges,
