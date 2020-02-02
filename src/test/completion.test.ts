@@ -50,7 +50,7 @@ suite('RCASM Completion', () => {
 					documentation: {
 						kind: 'markdown',
 						value:
-							'Adds the contents of register B and C (B+C) placing the result in register A or D.\n\nSyntax: [ a | d ]'
+							'Adds the contents of register B and C (B+C) placing the result in register A or D.\n\nSyntax: `[ a | d ]`'
 					}
 				}
 			]

@@ -22,7 +22,7 @@ export const rcasmData: RCASMDataV1 = {
 			"summary": "Branch if Carry Set [GOTO]",
 			"snippet": "bcs ${1:label}",
 			"description": "Jumps to the given address if the carry flag is set.",
-			"synopsis": "PC = {0} (if CY)",
+			"synopsis": "PC = {0} [if CY]",
 			"syntax": "<label>"
 		},
 		{
@@ -30,7 +30,7 @@ export const rcasmData: RCASMDataV1 = {
 			"summary": "Branch if Equal/Zero [GOTO]",
 			"snippet": "beq ${1:label}",
 			"description": "Jumps to the given address if the zero flag is set (equal).",
-			"synopsis": "PC = {0} (if Z)",
+			"synopsis": "PC = {0} [if Z]",
 			"syntax": "<label>"
 		},
 		{
@@ -38,7 +38,7 @@ export const rcasmData: RCASMDataV1 = {
 			"summary": "Branch if Less Than or Equal (Sign+Zero) [GOTO]",
 			"snippet": "ble ${1:label}",
 			"description": "Jumps to the given address if the sign or zero flag is set (less than or equal).",
-			"synopsis": "PC = {0} (if S or Z)",
+			"synopsis": "PC = {0} [if S or Z]",
 			"syntax": "<label>"
 		},
 		{
@@ -46,7 +46,7 @@ export const rcasmData: RCASMDataV1 = {
 			"summary": "Branch if Less Than (Sign) [GOTO]",
 			"snippet": "blt ${1:label}",
 			"description": "Jumps to the given address if the sign flag is set (less than).",
-			"synopsis": "PC = {0} (if S)",
+			"synopsis": "PC = {0} [if S]",
 			"syntax": "<label>"
 		},
 		{
@@ -54,7 +54,7 @@ export const rcasmData: RCASMDataV1 = {
 			"summary": "Branch if Minus/Sign [GOTO]",
 			"snippet": "bmi ${1:label}",
 			"description": "Jumps to the given address if the sign flag is set (negative).",
-			"synopsis": "PC = {0} (if S)",
+			"synopsis": "PC = {0} [if S]",
 			"syntax": "<label>"
 		},
 		{
@@ -62,7 +62,7 @@ export const rcasmData: RCASMDataV1 = {
 			"summary": "Branch if Not Equal/Zero [GOTO]",
 			"snippet": "bne ${1:label}",
 			"description": "Jumps to the given address if the zero flag is not set (not equal).",
-			"synopsis": "PC = {0} (if not Z)",
+			"synopsis": "PC = {0} [if not Z]",
 			"syntax": "<label>"
 		},
 		{

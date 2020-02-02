@@ -78,7 +78,7 @@ function getEntryMarkdownDescription(entry: IEntry2): string {
 	// 	result += '\n\n(' + browserLabel + ')';
 	// }
 	if ('syntax' in entry) {
-		result += `\n\nSyntax: ${entry.syntax}`;
+		result += `\n\nSyntax: \`${entry.syntax}\``;
 	}
 	// if (entry.references && entry.references.length > 0) {
 	// 	result += '\n\n';
@@ -121,10 +121,6 @@ function getEntrySpecificStringDescription(entry: IEntry2): string {
 		return '';
 	}
 
-	if (typeof entry.synopsis !== 'string') {
-		return entry.synopsis.value;
-	}
-
 	let result: string = '';
 
 	if (entry.summary) {
@@ -147,11 +143,7 @@ function getEntrySpecificMarkdownDescription(entry: IEntry2): string {
 		result += `${entry.summary}\n\n`;
 	}
 
-	if (typeof entry.synopsis === 'string') {
-		result += entry.synopsis;
-	} else {
-		result = entry.synopsis.value;
-	}
+	result += '`' + entry.synopsis + '`';
 
 	return result;
 }
