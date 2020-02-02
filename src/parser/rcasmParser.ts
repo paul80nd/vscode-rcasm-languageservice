@@ -244,7 +244,6 @@ export class Parser {
 
 		// Obtain parameters
 		switch (node.opcode) {
-			case nodes.OpcodeType.CLR:
 			case nodes.OpcodeType.ADD:
 			case nodes.OpcodeType.INC:
 			case nodes.OpcodeType.AND:
@@ -262,6 +261,9 @@ export class Parser {
 			case nodes.OpcodeType.MOV:
 				return this._processBinaryOpcode(node,
 					() => this._parseMoveRegister(), ParseError.RegisterExpected,
+					() => this._parseMoveRegister(), ParseError.RegisterExpected);
+			case nodes.OpcodeType.CLR:
+				return this._processUnaryOpcode(node,
 					() => this._parseMoveRegister(), ParseError.RegisterExpected);
 			case nodes.OpcodeType.OPC:
 				return this._processUnaryOpcode(node,

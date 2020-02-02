@@ -196,9 +196,15 @@ suite('rcasm - Parser', () => {
 
 	test('Alu Opcode', function () {
 		let parser = new Parser();
-		assertOpcodeNodeWithParams('clr', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.CLR, nodes.RegisterType.A);
 		assertOpcodeNodeWithParams('add d', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.ADD, nodes.RegisterType.D);
 		assertOpcodeNodeWithParams('rol a', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.ROL, nodes.RegisterType.A);
+	});
+
+	test('Clear', function () {
+		let parser = new Parser();
+		assertOpcodeNodeWithParams('clr a', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.CLR, nodes.RegisterType.A);
+		assertOpcodeNodeWithParams('clr c', parser, parser._parseOpcodeAndParams.bind(parser), nodes.OpcodeType.CLR, nodes.RegisterType.C);
+		assertError('clr', parser, parser._parseOpcodeAndParams.bind(parser), ParseError.RegisterExpected);
 	});
 
 	test('8-bit Ldi Opcode', function () {

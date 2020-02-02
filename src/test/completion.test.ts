@@ -33,18 +33,7 @@ suite('RCASM Completion', () => {
 		});
 
 	});
-
-	// test('Alu Opcode Completion', function (): any {
-
-	// 	testCompletionFor('add |', {
-	// 		items: [
-	// 			{ label: 'a', resultText: ' a' },
-	// 			{ label: 'd', resultText: ' d' }
-	// 		]
-	// 	});
-
-	// });
-
+	
 	test('Completion includes detail', () => {
 		testCompletionFor('bc|', {
 			items: [
