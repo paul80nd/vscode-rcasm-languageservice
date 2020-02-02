@@ -28,8 +28,8 @@ export class RCASMHover {
 		for (let i = 0; i < nodepath.length; i++) {
 			const node = nodepath[i];
 
-			if (node instanceof nodes.Instruction && node.opcode) {
-				const opcode = node.opcode;
+			if (node instanceof nodes.Opcode) {
+				const opcode = node as nodes.Opcode;
 				const mnemonicName = nodes.OpcodeType[opcode.opcode].toLowerCase();
 				const entry = languageFacts.rcasmDataManager.getMnemonic(mnemonicName);
 				if (entry) {

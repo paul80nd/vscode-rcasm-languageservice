@@ -13,8 +13,8 @@ suite('Instruction Hover', () => {
 		assertHover('a|dd', addContent, 0);
 		assertHover('add|', addContent, 0);
 		assertHover('add \n ad|d', addContent, 6);
-		assertHover('lab|el: add', addContent, 0);
-		assertHover('add ;comm|ent', addContent, 0);
+		assertHover('lab|el: add', void 0, void 0);
+		assertHover('add ;comm|ent', void 0, void 0);
 	});
 
 	test('ALU', function (): any {
@@ -35,7 +35,7 @@ suite('Instruction Hover', () => {
 
 	test('MOV', function (): any {
 		assertHover('mov| b,c', { kind: 'markdown', value: 'Copy Register to Register [MOV8]\n\nB = C' }, 0);
-		assertHover('mov| a,d', { kind: 'markdown', value: 'Copy Register to Register [MOV8]\n\nA = D' }, 0);
+		assertHover('mov a|,d', { kind: 'markdown', value: 'Copy Register to Register [MOV8]\n\nA = D' }, 0);
 	});
 
 	test('LDI', function (): any {
@@ -47,10 +47,10 @@ suite('Instruction Hover', () => {
 	});
 
 	test('Branching', function (): any {
-		assertHover('jmp| label1', { kind: 'markdown', value: 'Jump to Label [GOTO]\n\nPC = (label1)' }, 0);
-		assertHover('jsr| label2', { kind: 'markdown', value: 'Call Subroutine (Jump and Link) [GOTO]\n\nXY = PC, PC = (label2)' }, 0);
-		assertHover('bne| label3', { kind: 'markdown', value: 'Branch if Not Equal/Zero [GOTO]\n\nPC = (label3) (if not Z)' }, 0);
-		assertHover('beq| label4', { kind: 'markdown', value: 'Branch if Equal/Zero [GOTO]\n\nPC = (label4) (if Z)' }, 0);
+		assertHover('jm|p label1', { kind: 'markdown', value: 'Jump to Label [GOTO]\n\nPC = (label1)' }, 0);
+		assertHover('jsr |label2', { kind: 'markdown', value: 'Call Subroutine (Jump and Link) [GOTO]\n\nXY = PC, PC = (label2)' }, 0);
+		assertHover('bne lab|el3', { kind: 'markdown', value: 'Branch if Not Equal/Zero [GOTO]\n\nPC = (label3) (if not Z)' }, 0);
+		assertHover('beq label4|', { kind: 'markdown', value: 'Branch if Equal/Zero [GOTO]\n\nPC = (label4) (if Z)' }, 0);
 		assertHover('ble| label5', { kind: 'markdown', value: 'Branch if Less Than or Equal (Sign+Zero) [GOTO]\n\nPC = (label5) (if S or Z)' }, 0);
 	});
 
