@@ -11,7 +11,6 @@ import { RCASMHover } from './services/rcasmHover';
 import { RCASMNavigation } from './services/rcasmNavigation';
 // import { format } from './services/rcasmFormatter';
 // import { doRename } from './services/rcasmRename';
-// import { findMatchingTagPosition } from './services/rcasmMatchingTagPosition';
 import { Diagnostic, Position, CompletionList, Hover, /*Range,*/ SymbolInformation, /*TextEdit, */DocumentHighlight, /*DocumentLink, FoldingRange, SelectionRange, WorkspaceEdit */ } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { /* Scanner, */ Program, CompletionConfiguration, Location, /* ICompletionParticipant, RCASMFormatConfiguration, DocumentContext, IRCASMDataProvider, RCASMDataV1, */ LanguageSettings, LanguageServiceOptions } from './rcasmLanguageTypes';
@@ -40,7 +39,6 @@ export interface LanguageService {
 	//	getFoldingRanges(document: TextDocument, context?: { rangeLimit?: number }): FoldingRange[];
 	//	getSelectionRanges(document: TextDocument, positions: Position[]): SelectionRange[];
 	//	doRename(document: TextDocument, position: Position, newName: string, rcasmDocument: RCASMDocument): WorkspaceEdit | null;
-	//	findMatchingTagPosition(document: TextDocument, position: Position, rcasmDocument: RCASMDocument): Position | null;
 }
 
 export function getLanguageService(options?: LanguageServiceOptions): LanguageService {
@@ -69,8 +67,7 @@ export function getLanguageService(options?: LanguageServiceOptions): LanguageSe
 		//		getFoldingRanges,
 		//		getSelectionRanges,
 		//		doTagComplete: rcasmCompletion.doTagComplete.bind(rcasmCompletion),
-		//		doRename,
-		//		findMatchingTagPosition
+		//		doRename
 	};
 }
 
