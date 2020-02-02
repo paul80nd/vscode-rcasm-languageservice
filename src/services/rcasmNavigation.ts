@@ -30,6 +30,16 @@ export class RCASMNavigation {
 		};
 	}
 
+	public findReferences(document: TextDocument, position: Position, program: nodes.Program): Location[] {
+		const highlights = this.findDocumentHighlights(document, position, program);
+		return highlights.map(h => {
+			return {
+				uri: document.uri,
+				range: h.range
+			};
+		});
+	}
+
 	public findDocumentHighlights(document: TextDocument, position: Position, program: nodes.Program): DocumentHighlight[] {
 		const result: DocumentHighlight[] = [];
 
@@ -95,6 +105,11 @@ export class RCASMNavigation {
 }
 
 function getHighlightKind(node: nodes.Node): DocumentHighlightKind {
+
+	if (node instanceof nodes.Label) {
+		return DocumentHighlightKind.Write;
+	}
+
 	return DocumentHighlightKind.Read;
 }
 

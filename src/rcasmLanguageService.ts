@@ -35,6 +35,7 @@ export interface LanguageService {
 	//	setCompletionParticipants(registeredCompletionParticipants: ICompletionParticipant[]): void;
 	doHover(document: TextDocument, position: Position, program: Program): Hover | null;
 	findDefinition(document: TextDocument, position: Position, program: Program): Location | null;
+	findReferences(document: TextDocument, position: Position, program: Program): Location[];
 	//	format(document: TextDocument, range: Range | undefined, options: RCASMFormatConfiguration): TextEdit[];
 	//	findDocumentLinks(document: TextDocument, documentContext: DocumentContext): DocumentLink[];
 	findDocumentSymbols(document: TextDocument, program: Program): SymbolInformation[];
@@ -64,6 +65,7 @@ export function getLanguageService(options?: LanguageServiceOptions): LanguageSe
 		//		setCompletionParticipants: rcasmCompletion.setCompletionParticipants.bind(rcasmCompletion),
 		doHover: rcasmHover.doHover.bind(rcasmHover),
 		findDefinition: rcasmNavigation.findDefinition.bind(rcasmNavigation),
+		findReferences: rcasmNavigation.findReferences.bind(rcasmNavigation),
 		//		format,
 		findDocumentHighlights: rcasmNavigation.findDocumentHighlights.bind(rcasmNavigation),
 		//		findDocumentLinks,

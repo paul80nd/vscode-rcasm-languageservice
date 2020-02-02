@@ -59,8 +59,8 @@ suite('RCASM - Navigation', () => {
 
 	test('mark occurrences for label', () => {
 		let ls = getLanguageService();
-		assertHighlights(ls, 'label1: add', 'label1', 1, 0);
-		assertHighlights(ls, 'label2: jmp label2', 'label2', 2, 0);
+		assertHighlights(ls, 'label1: add', 'label1', 1, 1);
+		assertHighlights(ls, 'label2: jmp label2', 'label2', 2, 1);
 	});
 
 });
