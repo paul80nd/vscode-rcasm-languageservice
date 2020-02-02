@@ -1,11 +1,12 @@
 'use strict';
 
 import * as assert from 'assert';
+import * as nodes from '../parser/rcasmNodes';
 
 import {
-	/*DocumentContext,*/ TextDocument, /*DocumentHighlightKind, */ Range, Position, /*TextEdit, Color,
+	/*DocumentContext,*/ TextDocument, DocumentHighlightKind, Range, Position, /*TextEdit, Color,
 	ColorInformation, DocumentLink, */ SymbolKind, SymbolInformation, Location,
-	getLanguageService, LanguageService /*, Diagnostic, Stylesheet*/
+	getLanguageService, LanguageService, /*, Diagnostic,*/ Program
 } from '../rcasmLanguageService';
 
 export function assertSymbols(ls: LanguageService, input: string, expected: SymbolInformation[], lang: string = 'rcasm') {
@@ -17,11 +18,49 @@ export function assertSymbols(ls: LanguageService, input: string, expected: Symb
 	assert.deepEqual(symbols, expected);
 }
 
+export function assertHighlights(ls: LanguageService, input: string, marker: string, expectedMatches: number, expectedWrites: number, elementName?: string) {
+	let document = TextDocument.create('test://test/test.css', 'css', 0, input);
+
+	let program = ls.parseProgram(document);
+	assertNoErrors(program);
+
+	let index = input.indexOf(marker) + marker.length;
+	let position = document.positionAt(index);
+
+	let highlights = ls.findDocumentHighlights(document, position, program);
+	assert.equal(highlights.length, expectedMatches, input);
+
+	let nWrites = 0;
+	for (let highlight of highlights) {
+		if (highlight.kind === DocumentHighlightKind.Write) {
+			nWrites++;
+		}
+		let range = highlight.range;
+		let start = document.offsetAt(range.start), end = document.offsetAt(range.end);
+		assert.equal(document.getText().substring(start, end), elementName || marker);
+	}
+	assert.equal(nWrites, expectedWrites, input);
+}
+
+function assertNoErrors(program: Program): void {
+	const markers = nodes.ParseErrorCollector.entries(<nodes.Program>program);
+	if (markers.length > 0) {
+		assert.ok(false, 'node has errors: ' + markers[0].getMessage() + ', offset: ' + markers[0].getNode().offset);
+	}
+}
+
 suite('RCASM - Navigation', () => {
 
 	test('basic labels', () => {
 		let ls = getLanguageService();
-		assertSymbols(ls, 'label1: add', [{ name: 'label1', kind: SymbolKind.Variable, location: Location.create('test://test/test.rcasm', newRange(0, 7)) }]);
+		assertSymbols(ls, 'label1: add', [{ name: 'label1', kind: SymbolKind.Variable, location: Location.create('test://test/test.rcasm', newRange(0, 6)) }]);
+		assertSymbols(ls, 'label2: jmp label2', [{ name: 'label2', kind: SymbolKind.Variable, location: Location.create('test://test/test.rcasm', newRange(0, 6)) }]);
+	});
+
+	test('mark occurrences for label', () => {
+		let ls = getLanguageService();
+		assertHighlights(ls, 'label1: add', 'label1', 1, 0);
+		assertHighlights(ls, 'label2: jmp label2', 'label2', 2, 0);
 	});
 
 });

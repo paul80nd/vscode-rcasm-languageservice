@@ -76,7 +76,7 @@ export class ScopeBuilder implements nodes.IVisitor {
 	public visitNode(node: nodes.Node): boolean {
 		switch (node.type) {
 			case nodes.NodeType.Label:
-				this.addSymbol(node, (<nodes.Label>node).getName(), void 0, nodes.ReferenceType.Label);
+				this.addSymbol(node, (<nodes.Label>node).getText(), void 0, nodes.ReferenceType.Label);
 				return true;
 		}
 		return true;
@@ -107,7 +107,7 @@ export class Symbols {
 	}
 
 	private evaluateReferenceTypes(node: nodes.Node): nodes.ReferenceType[] | null {
-		if (node instanceof nodes.LabelRef) {
+		if (node instanceof nodes.LabelRef || node instanceof nodes.Label) {
 			return [nodes.ReferenceType.Label];
 		}
 		return null;
@@ -123,6 +123,23 @@ export class Symbols {
 			return this.internalFindSymbol(node, referenceTypes);
 		}
 		return null;
+	}
+
+	public matchesSymbol(node: nodes.Node, symbol: Symbol): boolean {
+		if (!node) {
+			return false;
+		}
+		if (!node.matches(symbol.name)) {
+			return false;
+		}
+
+		const referenceTypes = this.evaluateReferenceTypes(node);
+		if (!referenceTypes || referenceTypes.indexOf(symbol.type) === -1) {
+			return false;
+		}
+
+		const nodeSymbol = this.internalFindSymbol(node, referenceTypes);
+		return nodeSymbol === symbol;
 	}
 
 }

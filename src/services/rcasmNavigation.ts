@@ -1,7 +1,7 @@
 'use strict';
 
 import {
-	/*Color, ColorInformation, ColorPresentation, DocumentHighlight, DocumentHighlightKind, DocumentLink,*/ Location,
+	/*Color, ColorInformation, ColorPresentation,*/ DocumentHighlight, DocumentHighlightKind,/* DocumentLink,*/ Location,
 	Position, Range, SymbolInformation, SymbolKind, /*TextEdit, WorkspaceEdit,*/ TextDocument /*, DocumentContext*/
 } from '../rcasmLanguageTypes';
 import * as nodes from '../parser/rcasmNodes';
@@ -30,6 +30,41 @@ export class RCASMNavigation {
 		};
 	}
 
+	public findDocumentHighlights(document: TextDocument, position: Position, program: nodes.Program): DocumentHighlight[] {
+		const result: DocumentHighlight[] = [];
+
+		const offset = document.offsetAt(position);
+		let node = nodes.getNodeAtOffset(program, offset);
+		if (!node || node.type !== nodes.NodeType.Label && node.type !== nodes.NodeType.LabelRef) {
+			return result;
+		}
+
+		const symbols = new Symbols(program);
+		const symbol = symbols.findSymbolFromNode(node);
+		const name = node.getText();
+
+		program.accept(candidate => {
+			if (symbol) {
+				if (symbols.matchesSymbol(candidate, symbol)) {
+					result.push({
+						kind: getHighlightKind(candidate),
+						range: getRange(candidate, document)
+					});
+					return false;
+				}
+			} else if (node && node.type === candidate.type && candidate.matches(name)) {
+				// Same node type and data
+				result.push({
+					kind: getHighlightKind(candidate),
+					range: getRange(candidate, document)
+				});
+			}
+			return true;
+		});
+
+		return result;
+	}
+
 	public findDocumentSymbols(document: TextDocument, program: nodes.Program): SymbolInformation[] {
 		const result: SymbolInformation[] = [];
 
@@ -42,7 +77,7 @@ export class RCASMNavigation {
 			let locationNode: nodes.Node | null = node;
 
 			if (node instanceof nodes.Label) {
-				entry.name = (<nodes.Label>node).getName();
+				entry.name = (<nodes.Label>node).getText();
 				entry.kind = SymbolKind.Variable;
 			}
 
@@ -57,6 +92,10 @@ export class RCASMNavigation {
 		return result;
 	}
 
+}
+
+function getHighlightKind(node: nodes.Node): DocumentHighlightKind {
+	return DocumentHighlightKind.Read;
 }
 
 function getRange(node: nodes.Node, document: TextDocument): Range {

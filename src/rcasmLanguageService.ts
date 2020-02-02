@@ -11,11 +11,10 @@ import { RCASMHover } from './services/rcasmHover';
 import { RCASMNavigation } from './services/rcasmNavigation';
 // import { format } from './services/rcasmFormatter';
 // import { findDocumentLinks } from './services/rcasmLinks';
-// import { findDocumentHighlights } from './services/rcasmHighlighting';
 // import { findDocumentSymbols } from './services/rcasmSymbolsProvider';
 // import { doRename } from './services/rcasmRename';
 // import { findMatchingTagPosition } from './services/rcasmMatchingTagPosition';
-import { Diagnostic, Position, CompletionList, Hover, /*Range,*/ SymbolInformation, /*TextEdit, DocumentHighlight, DocumentLink, FoldingRange, SelectionRange, WorkspaceEdit */ } from 'vscode-languageserver-types';
+import { Diagnostic, Position, CompletionList, Hover, /*Range,*/ SymbolInformation, /*TextEdit, */DocumentHighlight, /*DocumentLink, FoldingRange, SelectionRange, WorkspaceEdit */ } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 import { /* Scanner, */ Program, CompletionConfiguration, Location, /* ICompletionParticipant, RCASMFormatConfiguration, DocumentContext, IRCASMDataProvider, RCASMDataV1, */ LanguageSettings, LanguageServiceOptions } from './rcasmLanguageTypes';
 // import { getFoldingRanges } from './services/rcasmFolding';
@@ -31,7 +30,7 @@ export interface LanguageService {
 	//	createScanner(input: string, initialOffset?: number): Scanner;
 	doValidation(document: TextDocument, program: Program, documentSettings?: LanguageSettings): Diagnostic[];
 	parseProgram(document: TextDocument): Program;
-	//	findDocumentHighlights(document: TextDocument, position: Position, rcasmDocument: RCASMDocument): DocumentHighlight[];
+	findDocumentHighlights(document: TextDocument, position: Position, program: Program): DocumentHighlight[];
 	doComplete(document: TextDocument, position: Position, program: Program, options?: CompletionConfiguration): CompletionList;
 	//	setCompletionParticipants(registeredCompletionParticipants: ICompletionParticipant[]): void;
 	doHover(document: TextDocument, position: Position, program: Program): Hover | null;
@@ -66,7 +65,7 @@ export function getLanguageService(options?: LanguageServiceOptions): LanguageSe
 		doHover: rcasmHover.doHover.bind(rcasmHover),
 		findDefinition: rcasmNavigation.findDefinition.bind(rcasmNavigation),
 		//		format,
-		//		findDocumentHighlights,
+		findDocumentHighlights: rcasmNavigation.findDocumentHighlights.bind(rcasmNavigation),
 		//		findDocumentLinks,
 		findDocumentSymbols: rcasmNavigation.findDocumentSymbols.bind(rcasmNavigation),
 		//		getFoldingRanges,

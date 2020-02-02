@@ -129,6 +129,10 @@ export class Node {
 		return this.getTextProvider()(this.offset, this.length);
 	}
 
+	public matches(str: string): boolean {
+		return this.length === str.length && this.getTextProvider()(this.offset, this.length) === str;
+	}
+
 	public accept(visitor: IVisitorFunction): void {
 		if (visitor(this) && this.children) {
 			for (const child of this.children) {
@@ -312,16 +316,12 @@ export class Label extends Node {
 
 	constructor(offset: number, length: number) {
 		super(offset, length);
-	}
+	}	
 
 	public get type(): NodeType {
 		return NodeType.Label;
 	}
-	
-	public getName(): string {
-		return this.getText().slice(0, -1);
-	}
-	
+
 }
 
 export class LabelRef extends Node {

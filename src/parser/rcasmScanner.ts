@@ -151,9 +151,10 @@ export class Scanner {
 
 		// Identifier [a-zA-Z] [a-zA-Z0-9.]* (or label with :)
 		if (this._identifier()) {
-			if (this.stream.peekChar() === _COL){
-				this.stream.advance(1);
-				return this.finishToken(offset, TokenType.Label);	
+			if (this.stream.peekChar() === _COL) {
+				const labelToken = this.finishToken(offset, TokenType.Label);
+				this.stream.advance(1);		// Ignore ':' - only used to denote label
+				return labelToken;
 			}
 			return this.finishToken(offset, TokenType.Identifier);
 		}
