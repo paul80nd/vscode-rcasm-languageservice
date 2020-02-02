@@ -7,8 +7,13 @@ export enum NodeType {
 	Instruction,
 	Constant,
 	Label,
+	LabelRef,
 	Register,
 	Opcode
+}
+
+export enum ReferenceType {
+	Label
 }
 
 export enum RegisterType {
@@ -218,6 +223,14 @@ export class Node {
 		return this.children ? this.children.slice(0) : [];
 	}
 
+	public getParent(): Node | null {
+		let result = this.parent;
+		while (result instanceof Nodelist) {
+			result = result.parent;
+		}
+		return result;
+	}
+
 }
 
 export interface NodeConstructor {
@@ -277,7 +290,7 @@ export class Instruction extends Node {
 		return this.setNode('label', node);
 	}
 	public getLabel(): Label | undefined {
-		return this.opcode;
+		return this.label;
 	}
 
 	public setOpcode(node: Opcode | null): node is Opcode {
@@ -303,6 +316,22 @@ export class Label extends Node {
 
 	public get type(): NodeType {
 		return NodeType.Label;
+	}
+	
+	public getName(): string {
+		return this.getText().slice(0, -1);
+	}
+	
+}
+
+export class LabelRef extends Node {
+
+	constructor(offset: number, length: number) {
+		super(offset, length);
+	}
+
+	public get type(): NodeType {
+		return NodeType.LabelRef;
 	}
 
 }

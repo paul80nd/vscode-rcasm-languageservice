@@ -382,7 +382,7 @@ export class Parser {
 			return null;
 		}
 
-		const node = <nodes.Label>this.create(nodes.Label);
+		const node = <nodes.Label>this.create(nodes.LabelRef);
 		this.consumeToken();
 		return this.finish(node);
 	}

@@ -80,8 +80,8 @@ export class RCASMHover {
 			return nodes.RegisterType[regParam.register];
 		}
 
-		if (param instanceof nodes.Label) {
-			const regLabel = param as nodes.Label;
+		if (param instanceof nodes.LabelRef) {
+			const regLabel = param as nodes.LabelRef;
 			return `(${regLabel.getText()})`;
 		}
 

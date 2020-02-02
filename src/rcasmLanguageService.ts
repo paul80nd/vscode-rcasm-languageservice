@@ -8,15 +8,16 @@ import { Parser } from './parser/rcasmParser';
 import { RCASMValidation } from './services/rcasmValidation';
 import { RCASMCompletion } from './services/rcasmCompletion';
 import { RCASMHover } from './services/rcasmHover';
+import { RCASMNavigation } from './services/rcasmNavigation';
 // import { format } from './services/rcasmFormatter';
 // import { findDocumentLinks } from './services/rcasmLinks';
 // import { findDocumentHighlights } from './services/rcasmHighlighting';
 // import { findDocumentSymbols } from './services/rcasmSymbolsProvider';
 // import { doRename } from './services/rcasmRename';
 // import { findMatchingTagPosition } from './services/rcasmMatchingTagPosition';
-import { Diagnostic, Position, CompletionList, Hover, /*Range, SymbolInformation, TextEdit, DocumentHighlight, DocumentLink, FoldingRange, SelectionRange, WorkspaceEdit */ } from 'vscode-languageserver-types';
+import { Diagnostic, Position, CompletionList, Hover, /*Range,*/ SymbolInformation, /*TextEdit, DocumentHighlight, DocumentLink, FoldingRange, SelectionRange, WorkspaceEdit */ } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
-import { /* Scanner, */ Program, CompletionConfiguration, /* ICompletionParticipant, RCASMFormatConfiguration, DocumentContext, IRCASMDataProvider, RCASMDataV1, */ LanguageSettings, LanguageServiceOptions } from './rcasmLanguageTypes';
+import { /* Scanner, */ Program, CompletionConfiguration, Location, /* ICompletionParticipant, RCASMFormatConfiguration, DocumentContext, IRCASMDataProvider, RCASMDataV1, */ LanguageSettings, LanguageServiceOptions } from './rcasmLanguageTypes';
 // import { getFoldingRanges } from './services/rcasmFolding';
 // import { getSelectionRanges } from './services/rcasmSelectionRange';
 // import { handleCustomDataProviders } from './languageFacts/builtinDataProviders';
@@ -34,9 +35,10 @@ export interface LanguageService {
 	doComplete(document: TextDocument, position: Position, program: Program, options?: CompletionConfiguration): CompletionList;
 	//	setCompletionParticipants(registeredCompletionParticipants: ICompletionParticipant[]): void;
 	doHover(document: TextDocument, position: Position, program: Program): Hover | null;
+	findDefinition(document: TextDocument, position: Position, program: Program): Location | null;
 	//	format(document: TextDocument, range: Range | undefined, options: RCASMFormatConfiguration): TextEdit[];
 	//	findDocumentLinks(document: TextDocument, documentContext: DocumentContext): DocumentLink[];
-	//	findDocumentSymbols(document: TextDocument, rcasmDocument: RCASMDocument): SymbolInformation[];
+	findDocumentSymbols(document: TextDocument, program: Program): SymbolInformation[];
 	//	doTagComplete(document: TextDocument, position: Position, rcasmDocument: RCASMDocument): string | null;
 	//	getFoldingRanges(document: TextDocument, context?: { rangeLimit?: number }): FoldingRange[];
 	//	getSelectionRanges(document: TextDocument, positions: Position[]): SelectionRange[];
@@ -48,6 +50,7 @@ export function getLanguageService(options?: LanguageServiceOptions): LanguageSe
 	const rcasmParser = new Parser();
 	const rcasmHover = new RCASMHover(options && options.clientCapabilities);
 	const rcasmCompletion = new RCASMCompletion(options && options.clientCapabilities);
+	const rcasmNavigation = new RCASMNavigation();
 	const rcasmValidation = new RCASMValidation();
 
 	// if (options && options.customDataProviders) {
@@ -61,10 +64,11 @@ export function getLanguageService(options?: LanguageServiceOptions): LanguageSe
 		doComplete: rcasmCompletion.doComplete.bind(rcasmCompletion),
 		//		setCompletionParticipants: rcasmCompletion.setCompletionParticipants.bind(rcasmCompletion),
 		doHover: rcasmHover.doHover.bind(rcasmHover),
+		findDefinition: rcasmNavigation.findDefinition.bind(rcasmNavigation),
 		//		format,
 		//		findDocumentHighlights,
 		//		findDocumentLinks,
-		//		findDocumentSymbols,
+		findDocumentSymbols: rcasmNavigation.findDocumentSymbols.bind(rcasmNavigation),
 		//		getFoldingRanges,
 		//		getSelectionRanges,
 		//		doTagComplete: rcasmCompletion.doTagComplete.bind(rcasmCompletion),
