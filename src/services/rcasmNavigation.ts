@@ -1,7 +1,7 @@
 'use strict';
 
 import {
-	/*Color, ColorInformation, ColorPresentation,*/ DocumentHighlight, DocumentHighlightKind,/* DocumentLink,*/ Location,
+	DocumentHighlight, DocumentHighlightKind,/* DocumentLink,*/ Location,
 	Position, Range, SymbolInformation, SymbolKind, /*TextEdit, WorkspaceEdit,*/ TextDocument /*, DocumentContext*/
 } from '../rcasmLanguageTypes';
 import * as nodes from '../parser/rcasmNodes';

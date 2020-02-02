@@ -4,8 +4,8 @@ import * as assert from 'assert';
 import * as nodes from '../parser/rcasmNodes';
 
 import {
-	/*DocumentContext,*/ TextDocument, DocumentHighlightKind, Range, Position, /*TextEdit, Color,
-	ColorInformation, DocumentLink, */ SymbolKind, SymbolInformation, Location,
+	/*DocumentContext,*/ TextDocument, DocumentHighlightKind, Range, Position, /*TextEdit,
+	DocumentLink, */ SymbolKind, SymbolInformation, Location,
 	getLanguageService, LanguageService, /*, Diagnostic,*/ Program
 } from '../rcasmLanguageService';
 
