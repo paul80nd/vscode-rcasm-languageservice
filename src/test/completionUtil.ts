@@ -6,7 +6,7 @@
 import * as assert from 'assert';
 import * as rcasmLanguageService from '../rcasmLanguageService';
 
-import { CompletionList, CompletionItemKind, MarkupContent } from 'vscode-languageserver-types';
+import { CompletionList, CompletionItemKind, MarkupContent, TextEdit } from 'vscode-languageserver-types';
 import { TextDocument } from 'vscode-languageserver-textdocument';
 
 interface ItemDescription {
@@ -23,7 +23,7 @@ function asPromise<T>(result: T): Promise<T> {
 	return Promise.resolve(result);
 }
 
-function assertCompletion(completions: CompletionList, expected: ItemDescription, document: TextDocument, offset: number) {
+export function assertCompletion(completions: CompletionList, expected: ItemDescription, document: TextDocument) {
 	const matches = completions.items.filter(completion => {
 		return completion.label === expected.label;
 	});
@@ -44,7 +44,8 @@ function assertCompletion(completions: CompletionList, expected: ItemDescription
 		assert.equal(match.kind, expected.kind);
 	}
 	if (expected.resultText && match.textEdit) {
-		assert.equal(TextDocument.applyEdits(document, [match.textEdit]), expected.resultText);
+		const edit = TextEdit.is(match.textEdit) ? match.textEdit : TextEdit.replace(match.textEdit.replace, match.textEdit.newText);
+		assert.equal(TextDocument.applyEdits(document, [edit]), expected.resultText);
 	}
 	if (expected.filterText) {
 		assert.equal(match.filterText, expected.filterText);
@@ -74,7 +75,7 @@ export function testCompletionFor(value: string, expected: { count?: number, ite
 	}
 	if (expected.items) {
 		for (const item of expected.items) {
-			assertCompletion(list, item, document, offset);
+			assertCompletion(list, item, document);
 		}
 	}
 }
